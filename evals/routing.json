@@ -1,110 +1,125 @@
 {
-  "_note": "Baseline measured with ~/.claude/CLAUDE.md installed (2026-11-03); no pre-rule baseline exists. Run each prompt in a fresh desktop-app session and record the skills that load in observed_baseline; set expected from the rules in CLAUDE.md.draft. Re-run after every change and diff.",
+  "_note": "Baseline measured with ~/.claude/CLAUDE.md installed (2026-11-03); no pre-rule baseline exists. Run each prompt in a fresh desktop-app session and record the skills that load in observed_baseline; set expected from the rules in CLAUDE.md.draft. Re-run after every change and diff. Run 2026-11-03: c1-a/c1-c in an empty folder, others in seeded fixtures; one sample per case; wrapper text (background + notes folder) precedes each prompt.",
   "cases": [
     {
       "id": "c1-a",
       "area": "brainstorming-vs-ponytail",
       "prompt": "幫我做一個可以匯出 CSV 的功能",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "brainstorming first, no code",
+      "observed_baseline": "Skill(superpowers:brainstorming); no files written; asked purpose (empty folder)",
+      "verdict": "match"
     },
     {
       "id": "c1-b",
       "area": "brainstorming-vs-ponytail",
       "prompt": "把 utils.py 裡 parse_date 註解的錯字 recieve 改成 receive",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "direct minimal edit, no brainstorming",
+      "observed_baseline": "Grep > Edit utils.py; no Skill. (First run, utils.py missing: Glob > Grep, no Skill, asked for path)",
+      "verdict": "match"
     },
     {
       "id": "c1-c",
       "area": "brainstorming-vs-ponytail",
       "prompt": "幫我新增使用者登入",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "brainstorming first, no code",
+      "observed_baseline": "Skill(superpowers:brainstorming), classified architectural; no code; asked stack (empty folder)",
+      "verdict": "match"
     },
     {
       "id": "c2-a",
       "area": "tdd-threshold",
       "prompt": "修這個 bug：average() 傳入空陣列時會除以零",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "failing test first, then fix",
+      "observed_baseline": "Write test_stats.py > run (fail) > Edit stats.py > run (pass); no Skill loaded",
+      "verdict": "match"
     },
     {
       "id": "c2-b",
       "area": "tdd-threshold",
       "prompt": "把 README 的標題改成 Skill Lab",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "direct edit, no test, no brainstorming",
+      "observed_baseline": "Read > Edit README.md; no Skill; no test",
+      "verdict": "match"
     },
     {
       "id": "c2-c",
       "area": "tdd-threshold",
       "prompt": "新增一個計算運費的函式，訂單滿 1000 免運",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "brainstorming (new feature), then test-first",
+      "observed_baseline": "no brainstorming; AskUserQuestion > Write test_shop.py > run (fail) > Edit shop.py; no Skill",
+      "verdict": "partial"
     },
     {
       "id": "c3-a",
       "area": "review-routing",
       "prompt": "幫我 review 這個 PR",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "independent reviewer subagent before merge",
+      "observed_baseline": "Skill(ponytail:ponytail-review) > Bash; self-review, no subagent",
+      "verdict": "deviation"
     },
     {
       "id": "c3-b",
       "area": "review-routing",
       "prompt": "我改完了，合併前幫我看一下 diff",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "independent reviewer subagent",
+      "observed_baseline": "Bash > Agent(Explore) as reviewer; no Skill loaded",
+      "verdict": "match"
     },
     {
       "id": "c3-c",
       "area": "review-routing",
       "prompt": "這個 3 行的 typo 修正需要 review 嗎",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "self-review, say what was checked",
+      "observed_baseline": "Bash (diff); self-review stated what was checked; no Skill",
+      "verdict": "match"
     },
     {
       "id": "c4-a",
       "area": "parallel-vs-serial",
       "prompt": "這 4 個測試檔各自失敗，幫我一起查原因",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "rule permits parallel read-only investigation",
+      "observed_baseline": "Skill(superpowers:systematic-debugging); investigated serially in-session, no subagents",
+      "verdict": "not-exercised"
     },
     {
       "id": "c4-b",
       "area": "parallel-vs-serial",
       "prompt": "同時掃描 20 個資料夾，找出過期的 TODO",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "rule permits parallel read-only scan",
+      "observed_baseline": "Bash > Grep > Bash: one grep, no subagents",
+      "verdict": "match"
     },
     {
       "id": "c4-c",
       "area": "parallel-vs-serial",
       "prompt": "照這份計畫實作 5 個彼此獨立、會修改不同檔案的 task",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "writers one at a time",
+      "observed_baseline": "no subagents, no plan-execution Skill; 5 sequential Writes in one session",
+      "verdict": "match"
     },
     {
       "id": "c5-a",
       "area": "document-family",
       "prompt": "幫我寫一份專案進度報告給主管",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "no rule; record only",
+      "observed_baseline": "Write PROGRESS_REPORT.md in the folder; no Skill, no docs connector, no Artifact",
+      "verdict": "recorded"
     },
     {
       "id": "c5-b",
       "area": "document-family",
       "prompt": "把這份報告做成 Word 檔",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "no rule; record only",
+      "observed_baseline": "Skill(anthropic-skills:docx), built report.docx",
+      "verdict": "recorded"
     },
     {
       "id": "c5-c",
       "area": "document-family",
       "prompt": "幫我做一份簡報介紹這個專案",
-      "expected": null,
-      "observed_baseline": null
+      "expected": "no rule; record only",
+      "observed_baseline": "Artifact tool (deck type), published a private artifact; no Skill loaded",
+      "verdict": "recorded"
     }
   ]
 }
