@@ -6,4 +6,4 @@
 
 ## Local modifications
 
-- none
+- Added `scripts/render.sh` and the "Exporting Images" section in SKILL.md (2026-11-03)

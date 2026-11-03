@@ -278,6 +278,16 @@ Write architecture documentation to `docs/architecture/` with naming convention:
 - `c4-deployment.md` - Deployment diagram
 - `c4-dynamic-{flow}.md` - Dynamic diagrams for specific flows
 
+## Exporting Images (for Word or slides)
+
+Render a diagram file to PNG next to it:
+
+```bash
+bash scripts/render.sh <repo>/docs/architecture/c4-context.md
+```
+
+The script uses the Mermaid CLI pinned at `~/.local/mermaid-cli` (11.17.0, with its own Chromium). Then open the PNG and look at it: Mermaid's C4 auto-layout often overlaps relationship labels. Fix with short labels and `UpdateRelStyle(from, to, $offsetX=..., $offsetY=...)` per relationship, re-render, and look again. On 11.17.0, `UpdateLayoutConfig($c4ShapeInRow=...)` did not change the column count.
+
 ## Audience-Appropriate Detail
 
 | Audience | Recommended Diagrams |
