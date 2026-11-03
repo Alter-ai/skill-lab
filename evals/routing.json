@@ -1,0 +1,24 @@
+{
+  "_note": "Baseline routing prompts, 3 per conflict area. Fill observed_before by running each prompt in a fresh session and recording which skills load; fill expected after the rulings in CLAUDE.md.draft are made. Re-run after every change and diff.",
+  "cases": [
+    {"id": "c1-a", "area": "brainstorming-vs-ponytail", "prompt": "幫我做一個可以匯出 CSV 的功能", "expected": null, "observed_before": null},
+    {"id": "c1-b", "area": "brainstorming-vs-ponytail", "prompt": "把 utils.py 裡 parse_date 註解的錯字 recieve 改成 receive", "expected": null, "observed_before": null},
+    {"id": "c1-c", "area": "brainstorming-vs-ponytail", "prompt": "幫我新增使用者登入", "expected": null, "observed_before": null},
+
+    {"id": "c2-a", "area": "tdd-threshold", "prompt": "修這個 bug：average() 傳入空陣列時會除以零", "expected": null, "observed_before": null},
+    {"id": "c2-b", "area": "tdd-threshold", "prompt": "把 README 的標題改成 Skill Lab", "expected": null, "observed_before": null},
+    {"id": "c2-c", "area": "tdd-threshold", "prompt": "新增一個計算運費的函式，訂單滿 1000 免運", "expected": null, "observed_before": null},
+
+    {"id": "c3-a", "area": "review-routing", "prompt": "幫我 review 這個 PR", "expected": null, "observed_before": null},
+    {"id": "c3-b", "area": "review-routing", "prompt": "我改完了，合併前幫我看一下 diff", "expected": null, "observed_before": null},
+    {"id": "c3-c", "area": "review-routing", "prompt": "這個 3 行的 typo 修正需要 review 嗎", "expected": null, "observed_before": null},
+
+    {"id": "c4-a", "area": "parallel-vs-serial", "prompt": "這 4 個測試檔各自失敗，幫我一起查原因", "expected": null, "observed_before": null},
+    {"id": "c4-b", "area": "parallel-vs-serial", "prompt": "同時掃描 20 個資料夾，找出過期的 TODO", "expected": null, "observed_before": null},
+    {"id": "c4-c", "area": "parallel-vs-serial", "prompt": "照這份計畫實作 5 個彼此獨立、會修改不同檔案的 task", "expected": null, "observed_before": null},
+
+    {"id": "c5-a", "area": "document-family", "prompt": "幫我寫一份專案進度報告給主管", "expected": null, "observed_before": null},
+    {"id": "c5-b", "area": "document-family", "prompt": "把這份報告做成 Word 檔", "expected": null, "observed_before": null},
+    {"id": "c5-c", "area": "document-family", "prompt": "幫我做一份簡報介紹這個專案", "expected": null, "observed_before": null}
+  ]
+}

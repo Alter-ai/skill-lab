@@ -1,0 +1,18 @@
+<!--
+INSTALLED 2026-11-03 as ~/.claude/CLAUDE.md, body only (this comment omitted there). Keep the two in sync by hand.
+The five rules were accepted by the user as written.
+using-superpowers states that CLAUDE.md instructions take precedence over skills, which is why this layer can settle conflicts.
+Keep this file short: it is injected every turn.
+-->
+# Skill 優先順序（使用者規則，優先於任何 skill）
+
+1. 新功能或行為改變：先 brainstorming，核准前不寫程式。單檔、需求明確、不改行為的小修：直接做最小改動，不走 brainstorming。
+2. 測試：bug 修復與新的非瑣碎邏輯先寫會失敗的測試。文字、設定、重新命名等瑣碎改動免測試。
+3. Review：合併前與大改動派獨立 reviewer 子代理。小改動自己審，並說明看了什麼。
+4. 平行：互相獨立的唯讀任務可平行派發。會寫檔的實作代理一次只跑一個。
+5. 兩條規則衝突時，依本檔為準，並在回覆中說明採用了哪一條。
+
+# 環境
+
+- Windows 11。Bash 工具是 Git Bash，另有 PowerShell；路徑用正斜線。
+- `$HOME/mnt/...`、`/mnt/skills`、`/opt/pw-browsers` 是 Cowork Linux 沙盒路徑，這台機器上不存在，遇到就說明並跳過，不要硬跑。
