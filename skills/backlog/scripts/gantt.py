@@ -51,8 +51,7 @@ def render(rows, out):
             # +1 day so a task ending on a date covers that whole day
             ax.barh(i, (end - start + timedelta(days=1)).days, left=start, height=0.5, color="#2e86c1")
     ax.set_yticks(range(len(rows)), [r[0] for r in rows])
-    ax.margins(y=0.25)  # keeps edge milestone diamonds inside the axes
-    ax.invert_yaxis()
+    ax.set_ylim(len(rows) - 0.4, -0.6)  # first row on top; half a row of room keeps edge diamonds whole
     ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
     ax.grid(axis="x", color="#dddddd")
