@@ -94,6 +94,19 @@ stage(repo, {"src/c.py": "x = 1" + chr(10) + "++ b/other.py" + chr(10)})
 hk = gate.hunks(repo, gate.change_base(repo, CH))
 assert "other.py" not in hk and hk["src/c.py"] == [(1, 2)], hk
 
+# fix wave: ANY matching successful record counts (log is shared across worktrees)
+repo = build()
+gate.append_log(repo, {"t": time.time() + 1, "kind": "test", "ok": True, "cmd": "python -I tests x", "tree": "0" * 40})
+assert errs(repo) == [], errs(repo)
+# evidence entry without :line -> normal error, no traceback
+e = errs(build(evidence="[src/a.py]"))
+assert has(e, "evidence"), e
+# diff.noprefix must not break hunks
+repo = build()
+run(repo, "config", "diff.noprefix", "true")
+assert gate.hunks(repo, gate.change_base(repo, CH))["src/a.py"] == [(2, 2)]
+assert errs(repo) == [], errs(repo)
+
 # base / hunks
 repo = build()
 base = gate.change_base(repo, CH)

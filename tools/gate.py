@@ -44,7 +44,7 @@ def load_config(repo: Path) -> dict | None:
 def is_high(path: str, name: str, cfg: dict) -> bool:
     return (name in HIGH_NAMES or name.endswith(".lock")
             or (name.startswith("requirements") and name.endswith(".txt"))
-            or path.startswith((".github/workflows/", ".claude/"))
+            or path.startswith((".github/", ".gitlab-ci.yml", ".circleci/", ".claude/"))
             or any(fnmatch.fnmatch(path, g) or (g.startswith("**/") and fnmatch.fnmatch(path, g[3:]))
                    for g in cfg["sensitive"]))
 
@@ -62,7 +62,7 @@ def classify(path: str, cfg: dict) -> str:
         return "high"
     if is_test(p.parts, p.name):
         return "test"
-    if p.suffix in DOC_EXTS or p.parts[0] == "docs":
+    if p.suffix in DOC_EXTS or p.parts[:1] == ("docs",):
         return "doc"
     if p.suffix in CONFIG_EXTS:
         return "config"
@@ -119,6 +119,7 @@ def section(body: str, heading_prefix: str) -> str:
 
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+DIFF_OPTS = ("--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/")
 STATUSES = {"proposed", "partial", "done", "abandoned"}
 TIER_RE = re.compile(r"^Tier: (T[0-3])$", re.M)
 CHANGE_RE = re.compile(r"^Change: (docs/changes/\S+\.md)$", re.M)
@@ -127,7 +128,7 @@ CHANGE_RE = re.compile(r"^Change: (docs/changes/\S+\.md)$", re.M)
 def staged3(repo: Path) -> list[tuple[str, str, str]]:
     """(status, new path, old path); old == new unless renamed/copied."""
     base = "HEAD" if git(repo, "rev-parse", "-q", "--verify", "HEAD", check=False).strip() else EMPTY_TREE
-    parts = git(repo, "diff", "--cached", "--name-status", "-M", "-z", base).split("\0")
+    parts = git(repo, "diff", *DIFF_OPTS, "--cached", "--name-status", "-M", "-z", base).split("\0")
     out, i = [], 0
     while i < len(parts) and parts[i]:
         st = parts[i]
@@ -183,7 +184,7 @@ def architecture_ids(text: str) -> set[str]:
 def hunks(repo: Path, base: str) -> dict[str, list[tuple[int, int]]]:
     out: dict[str, list[tuple[int, int]]] = {}
     cur, head, prev = None, False, ""  # head: inside a file header, where "+++ " is a header and not content
-    for line in git(repo, "diff", "--cached", "-U0", "--no-color", base).splitlines():
+    for line in git(repo, "diff", *DIFF_OPTS, "--cached", "-U0", "--no-color", base).splitlines():
         if line.startswith("diff --git "):
             cur, head = None, True
         elif head and line.startswith("+++ ") and prev.startswith("--- "):
@@ -210,9 +211,10 @@ def _list(v) -> list[str]:
 def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, tier: str,
                 now: float) -> list[str]:
     errors: list[str] = []
+    first: list[str] = []
     ct = _added(repo, change_path)[1]
     base = change_base(repo, change_path)
-    parts = git(repo, "diff", "--cached", "--name-status", "-M", "-z", base).split("\0")
+    parts = git(repo, "diff", *DIFF_OPTS, "--cached", "--name-status", "-M", "-z", base).split("\0")
     names, i = [], 0  # every old and new path of this change's diff
     while i < len(parts) and parts[i]:
         n = 2 if parts[i][0] in "RC" else 1
@@ -244,10 +246,13 @@ def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, ti
         if not ok:
             errors.append("verified_by: no successful test run recorded")
         else:
-            tree = ok[-1]["tree"]
-            for p in names:
-                if classify(p, cfg) != "doc" and _blob(repo, ":" + p) != _blob(repo, f"{tree}:{p}"):
-                    errors.append(f"verified_by: {p} changed after the last successful test run")
+            for r in reversed(ok):  # the log is shared across worktrees: any run of exactly this content counts
+                stale = [p for p in names if classify(p, cfg) != "doc" and _blob(repo, ":" + p) != _blob(repo, f"{r['tree']}:{p}")]
+                if not stale:
+                    break
+                first = first or stale
+            else:
+                errors += [f"verified_by: {p} changed after the last successful test run" for p in first]
     if not _list(fm.get("reviewed_by")):
         errors.append("reviewed_by must be non-empty")
     elif not any(r.get("kind") == "agent" and change_path in r.get("prompt_paths", [])
@@ -360,7 +365,9 @@ def handle_evidence(payload: dict, now: float) -> None:
             return
         if tool in ("Bash", "PowerShell"):
             cmd = " ".join(str(ti.get("command", "")).split())
-            if _is_test_cmd(cmd, cfg["test_commands"]):
+            # a pipe, `;`, `&&` or a background run hides or defers the real exit status
+            if (_is_test_cmd(cmd, cfg["test_commands"]) and len(_invocations(cmd)) == 1
+                    and not ti.get("run_in_background")):
                 append_log(repo, {"t": now, "kind": "test", "ok": event == "PostToolUse", "cmd": cmd,
                                   "tree": tree_snapshot(repo)})
         elif tool == "Agent" and event == "PostToolUse":
@@ -376,6 +383,7 @@ ASSIGN_RE = re.compile(r"^[A-Za-z_]\w*=")
 HEREDOC_RE = re.compile(r"(?<!<)(<<-?[ \t]*(['\"]?)(\w+)\2[^\n]*)\n(?:.*?\n)?[ \t]*\3[ \t]*(?=\n|$)", re.S)
 BANNED_SUBS = {"cherry-pick", "revert", "rebase", "am", "commit-tree", "update-ref"}
 ARG_FLAGS = "mFCcStu"  # short flags that consume the rest of the cluster as their value
+LONG_ARG_FLAGS = {"--message", "--file", "--reuse-message", "--reedit-message", "--template"}
 SESSION = "CLAUDE_CODE_CHILD_SESSION"
 ENV_CMDS = {"unset", "env", "remove-item", "set-item", "clear-item", "remove-variable"}
 WRAPPERS = {"env", "command", "exec", "time", "nohup", "sudo", "nice"}
@@ -447,7 +455,7 @@ def _check_inv(inv: list[str]) -> str | None:
     if cmd in SHELLS:
         rest = inv[ci + 1:]
         spaced = [t for t in rest if re.search(r"\s", t)]
-        while rest and rest[0][0] in "-/":
+        while rest and rest[0][:1] in ("-", "/"):
             rest = rest[1:]
         for sub_cmd in spaced or [" ".join(rest)]:
             r = check_pretool(sub_cmd)
@@ -462,17 +470,23 @@ def _check_inv(inv: list[str]) -> str | None:
     if cmd == "env" or any(_word(t) == "env" for t in inv[:ci]):
         if "-i" in inv[:ci + 1] or "--ignore-environment" in inv[:ci + 1]:
             return "env -i hides CLAUDE_CODE_CHILD_SESSION from git"
-    if sub in BANNED_SUBS:
+    if sub in BANNED_SUBS and not (len(args) == 1 and args[0] in ("--abort", "--quit", "--help")):
         return f"git {sub} bypasses the commit-msg hook"
     if sub in ("commit", "merge") and any(len(a) >= 6 and "--no-verify".startswith(a) for a in args):
         return f"git {sub} --no-verify bypasses hooks"
     if sub == "commit":
+        skip = False  # the token after a value-taking flag is data, not a flag cluster
         for a in args:
-            if a.startswith("-") and not a.startswith("--"):
-                for ch in a[1:]:
+            if skip:
+                skip = False
+            elif a in LONG_ARG_FLAGS:
+                skip = True
+            elif a.startswith("-") and not a.startswith("--"):
+                for k, ch in enumerate(a[1:], 2):
                     if ch == "n":
                         return "git commit -n bypasses hooks"
                     if ch in ARG_FLAGS:
+                        skip = k == len(a)
                         break
     return None
 
@@ -494,10 +508,15 @@ def retro_warning(repo: Path) -> str | None:
     if not added:
         return None
     ack_file = repo / git(repo, "rev-parse", "--git-common-dir").strip() / "gate-ack"
-    ack = set(ack_file.read_text(encoding="utf-8").split()) if ack_file.is_file() else set()
+    ack: set[str] = set()
+    if ack_file.is_file():  # PowerShell 5.1 writes UTF-16LE with a BOM
+        raw = ack_file.read_bytes()
+        ack = set(raw.decode("utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig", errors="replace").split())
     miss = []
-    for h in git(repo, "log", "--format=%H", f"{added[-1]}..HEAD").split():
-        msg = git(repo, "show", "-s", "--format=%B", h)
+    for rec in git(repo, "log", "--format=%H%x1f%B%x1e", f"{added[-1]}..HEAD").split("\x1e"):
+        h, _, msg = rec.strip("\n").partition("\x1f")
+        if not h:
+            continue
         if not TIER_RE.search(msg.replace("\r\n", "\n")) and h not in ack and h[:7] not in ack:
             miss.append(h[:7])
     if not miss:
@@ -534,8 +553,8 @@ BLOCK_HEADER = "gate: blocked (see skill change-record)"
 
 
 def install(repo: Path, gate_path: str) -> str:
-    if git(repo, "config", "--local", "--get", "core.hooksPath", check=False).strip():
-        raise RuntimeError("refusing to install: core.hooksPath is set in this repo's local config")
+    if git(repo, "config", "--get", "core.hooksPath", check=False).strip():
+        raise RuntimeError("refusing to install: core.hooksPath is set in git config")
     hooks = (repo / git(repo, "rev-parse", "--git-path", "hooks").strip()).resolve()
     hooks.mkdir(parents=True, exist_ok=True)
     hook = hooks / "commit-msg"
@@ -546,6 +565,7 @@ def install(repo: Path, gate_path: str) -> str:
     hook.write_bytes(("#!/bin/sh\n" + MARKER + "\n"
                       'hooks="$(dirname "$0")"\n'
                       'if [ -f "$hooks/commit-msg.local" ]; then "$hooks/commit-msg.local" "$@" || exit $?; fi\n'
+                      '[ "$CLAUDE_CODE_CHILD_SESSION" = 1 ] || exit 0\n'
                       f'exec "{py}" -I "{gp}" commit-msg "$1"\n').encode("utf-8"))
     hook.chmod(0o755)
     return f"installed commit-msg hook in {hooks.as_posix()}"

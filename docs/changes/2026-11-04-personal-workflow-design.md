@@ -1,6 +1,6 @@
 ---
 tier: T3
-status: proposed
+status: done
 components: []          # skill-lab 尚無 ARCHITECTURE.md；試用階段補上
 evidence: []
 verified_by: []
@@ -114,7 +114,7 @@ supersedes: []
      |---|---|
      | 文件 | `*.md`、`*.txt`、`docs/` |
      | 低風險設定 | 其餘的 `json`／`yaml`／`toml`／`ini` |
-     | 高風險 | `.github/`、CI 設定、依賴清單（`package.json`、`pyproject.toml`、`requirements*.txt`、`Cargo.toml`、`go.mod`、lockfile）、`.claude/`、`.agent-gate`，以及 `.agent-gate` 的 `sensitive` |
+     | 高風險 | `.github/`（整個目錄）、`.gitlab-ci.yml`、`.circleci/`、依賴清單（`package.json`、`pyproject.toml`、`requirements*.txt`、`Cargo.toml`、`go.mod`、lockfile）、`.claude/`、`.agent-gate`，以及 `.agent-gate` 的 `sensitive` |
      | 測試 | 路徑段為 `test`、`tests`、`__tests__`、`spec`，或檔名符合 `test_*`、`*_test.*`、`*.test.*`、`*.spec.*` |
      | 原始碼 | 其餘所有檔案 |
 
@@ -129,7 +129,7 @@ supersedes: []
 4. **每次都檢查**：front matter 的 `tier` 和 trailer 一致，`status` 是合法值。
 5. **只在 `status` 變成 `done` 的那個 commit 做完整驗證**。「本變更」指的是從 change 檔第一次出現的 commit 的 parent，到目前 index 為止的累積 diff。
    - `components` 不能為空，每個 id 都要在 `ARCHITECTURE.md` 的 YAML 中找得到。
-   - 「行為改變」段不是空的時，本變更範圍內必須動過 `ARCHITECTURE.md`。這是防碎片化和避免無意義修改之間的折衷：要逃過這條，就得在 change 檔裡明寫「沒有行為改變」，人一看就知道。
+   - 「行為改變」段不是空的時，本變更範圍內必須動過 `ARCHITECTURE.md`。這是防碎片化和避免無意義修改之間的折衷：沒有行為改變時，把 `## 行為改變` 留空（空標題仍留在檔案裡，人一看就知道）。
    - `evidence` 的每個 `path:line` 都要落在本變更 `-U0` diff 的 hunk 範圍內。
    - `verified_by` 至少一條要符合 `test_commands`，而且證據日誌裡最後一次**成功**的測試紀錄要和現在一致：本變更動到的每個路徑，在該次紀錄的 tree 中的 blob 都等於現在 index 的 blob。也就是說，**測試跑的正是要 commit 的內容**。
    - `reviewed_by` 不能為空，而且證據日誌裡在本變更開始之後，要有一筆 Agent 派發紀錄，其 prompt 提到這份 change 檔的路徑。
@@ -232,6 +232,8 @@ skill-lab 原始檔改完後部署到 `~/.claude/`（CLAUDE.md 第 8 條）。
 
 ## 沒做／已知限制
 
+- **Predates the gate**: written before .agent-gate existed, so it was never gate-verified.
+- **A later failing test run after a successful one is ignored**: the gate accepts any successful run that tested exactly the committed content.
 - **用 Bash 偽造證據日誌**：deny 規則只擋 Edit/Write，擋不住 Bash 寫檔。除了 CLAUDE.md 的規定，沒有更強的防護。
 - **間接繞過**：例如寫成腳本執行、GitPython、Bash 的 alias。當下擋不住，只能靠 3.3 的事後追查警告。
 - **能證明跑過，不能證明有意義**：證據日誌能證明「測試跑的就是這份內容，而且通過」，不能證明測試測到了該測的東西。reviewer 派發紀錄也只能證明「有派」，不能證明「審得好」。

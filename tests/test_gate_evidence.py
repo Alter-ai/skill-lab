@@ -26,6 +26,14 @@ gate.handle_evidence(bash(repo, "tests/run.sh"), 102.0)   # prefix ending in "/"
 gate.handle_evidence(bash(repo, "pytestx"), 103.0)         # not a word boundary
 gate.handle_evidence(bash(repo, "ls"), 104.0)
 assert len(gate.read_log(repo)) == 3
+gate.handle_evidence(bash(repo, "pytest -q 2>&1"), 103.5)  # redirect stays one invocation
+assert len(gate.read_log(repo)) == 4
+for c in ("pytest -q | tail -3", "pytest; true", "pytest && echo ok"):
+    gate.handle_evidence(bash(repo, c), 103.6)
+bg = bash(repo, "pytest")
+bg["tool_input"]["run_in_background"] = True
+gate.handle_evidence(bg, 103.7)
+assert len(gate.read_log(repo)) == 4
 
 gate.handle_evidence({"hook_event_name": "PostToolUse", "tool_name": "Agent", "cwd": str(repo),
                       "tool_input": {"prompt": "see docs/changes/2026-01-01-x.md and `docs/changes/2026-01-01-x.md`, docs/changes/b.md)",

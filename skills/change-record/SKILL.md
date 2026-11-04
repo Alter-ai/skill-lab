@@ -16,7 +16,8 @@ The four headings stay in Chinese; the gate and readers expect them.
 tier: T2                     # T2 | T3
 status: partial              # proposed | partial | done | abandoned
 components: [api, auth]      # component ids from ARCHITECTURE.md
-evidence: [src/auth.py:42]   # path:line inside this change's diff
+evidence:                    # path:line inside this change's diff
+  - src/auth.py:42
 verified_by:
   - pytest tests/test_auth.py          # at least one must match test_commands
   - "manual: localhost 登入成功"        # machine cannot verify; highlighted
@@ -51,7 +52,7 @@ architecture  = "docs/architecture/ARCHITECTURE.md"                             
 
 ## Gate rules (commit-msg)
 
-1. File classes (matched by path segment, so `inspect.py` is not a test): docs (`*.md`, `*.rst`, `*.txt`, `docs/`), low-risk config (other json/yaml/yml/toml/ini/cfg), high-risk (`.github/workflows/`, CI files, dependency manifests and lockfiles, `.claude/`, `.agent-gate`, and `.agent-gate` `sensitive` globs), tests, source (everything else).
+1. File classes (matched by path segment, so `inspect.py` is not a test): docs (`*.md`, `*.rst`, `*.txt`, `docs/`), low-risk config (other json/yaml/yml/toml/ini/cfg), high-risk (all of `.github/`, `.gitlab-ci.yml`, `.circleci/`, dependency manifests and lockfiles, `.claude/`, `.agent-gate`, and `.agent-gate` `sensitive` globs), tests, source (everything else).
 2. Every commit needs `Tier: T0`-`T3`. T0: docs, low-risk config or pure renames only. T1: at most one modified non-test source file, no new source files, no high-risk paths. Otherwise it is T2.
 3. T2/T3 need `Change: docs/changes/<file>.md`, and the file must exist in the index. The change file `tier` must be T2 or T3 and equal the commit's Tier. Every commit that belongs to a T2/T3 change carries that change's Tier and Change trailers. While any change is `proposed` or `partial`, every commit touching source or test files must carry `Change:`, whatever its Tier.
 4. Every commit: front matter `tier` matches the trailer and `status` is valid.
@@ -62,7 +63,12 @@ architecture  = "docs/architecture/ARCHITECTURE.md"                             
    - `verified_by` has at least one entry matching `test_commands`, and the last successful recorded test run tested exactly the code being committed. Re-run the tests after the final code edit, from the repo's own directory as the session working directory.
    - `reviewed_by` is non-empty and a subagent was dispatched whose prompt contains the change file's path, and the dispatch happened at or after the commit that first added the change file.
    - T3 also needs a non-empty `## 決策` section.
-6. Merge commits: only the `Tier:` trailer is checked.
+6. Merge commits: only the `Tier:` trailer is checked, and it is required (`git merge -m "...\n\nTier: Tn"`; a bare merge commit is blocked).
+
+How to make evidence count:
+
+- Run the test command in the foreground, as a single command (no pipes, `;`, `&&`), in a form that matches `.agent-gate` `test_commands`, from the repo as the session working directory.
+- The reviewer dispatch prompt must contain the repo-relative forward-slash path `docs/changes/<file>.md`.
 
 Trailer format (also in git-workflow-and-versioning):
 

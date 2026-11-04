@@ -7,11 +7,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import gate  # noqa: E402
 
 cfg = {"test_commands": [], "sensitive": ["**/auth/**"], "architecture": "docs/architecture/ARCHITECTURE.md"}
+assert gate.classify("", cfg) == "source"
 assert gate.classify("README.md", cfg) == "doc"
 assert gate.classify("docs/x.py", cfg) == "doc"
 assert gate.classify("notes.txt", cfg) == "doc"
 assert gate.classify("conf/app.yaml", cfg) == "config"
-for p in [".github/workflows/ci.yml", "package.json", "pyproject.toml", "requirements-dev.txt",
+for p in [".github/workflows/ci.yml", ".github/CODEOWNERS", ".github/dependabot.yml", ".gitlab-ci.yml",
+          ".circleci/config.yml", "package.json", "pyproject.toml", "requirements-dev.txt",
           "Cargo.toml", "go.mod", "uv.lock", "pnpm-lock.yaml", ".claude/settings.json", ".agent-gate",
           "src/auth/login.py", r"src\auth\login.py"]:
     assert gate.classify(p, cfg) == "high", p

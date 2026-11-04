@@ -33,6 +33,8 @@ raw = hook(repo).read_bytes()
 text = raw.decode()
 assert b"\r" not in raw and text.startswith("#!/bin/sh\n# installed by gate.py\n")
 assert GATE in text and sys.executable.replace("\\", "/") in text and 'commit-msg "$1"' in text
+assert '[ "$CLAUDE_CODE_CHILD_SESSION" = 1 ] || exit 0\n' in text
+assert text.index("commit-msg.local") < text.index("CLAUDE_CODE_CHILD_SESSION") < text.index("exec ")
 if os.name == "posix":
     assert os.access(hook(repo), os.X_OK)
 
@@ -61,6 +63,25 @@ try:
     raise SystemExit("expected refusal")
 except RuntimeError as e:
     assert "hooksPath" in str(e)
+assert not hook(r).exists()
+
+# core.hooksPath at global scope refused too
+import tempfile  # noqa: E402
+gc = Path(tempfile.mkdtemp(prefix="gate-gc-")) / "gitconfig"
+gc.write_text("[core]\n\thooksPath = /elsewhere\n")
+r = make_repo({"a.txt": "a\n"})
+old = os.environ.get("GIT_CONFIG_GLOBAL")
+os.environ["GIT_CONFIG_GLOBAL"] = str(gc)
+try:
+    gate.install(r, GATE)
+    raise SystemExit("expected refusal")
+except RuntimeError as e:
+    assert "hooksPath" in str(e)
+finally:
+    if old is None:
+        del os.environ["GIT_CONFIG_GLOBAL"]
+    else:
+        os.environ["GIT_CONFIG_GLOBAL"] = old
 assert not hook(r).exists()
 
 # e2e

@@ -26,6 +26,7 @@ BLOCK = [
     "env --unset=CLAUDE_CODE_CHILD_SESSION git commit -m x", "env -u CLAUDE_CODE_CHILD_SESSION git commit -m x",
     "unset -v CLAUDE_CODE_CHILD_SESSION", "Set-Item Env:CLAUDE_CODE_CHILD_SESSION ''",
     "export GIT_CONFIG_KEY_0=core.hooksPath", "(git rebase main)", "{ git rebase main; }",
+    "git commit -m x -n", "git rebase --continue", "git rebase --skip", "git cherry-pick --continue",
 ]
 ALLOW = [
     "git log --grep commit", "git show HEAD", 'git commit -m "fix -n flag parsing"', "ls -n",
@@ -34,6 +35,9 @@ ALLOW = [
     "echo git rebase main", "git commit -m 'unset CLAUDE_CODE_CHILD_SESSION core.hooksPath'",
     "git commit -m \"$(cat <<'EOF'\nfix: core.hooksPath and unset CLAUDE_CODE_CHILD_SESSION\n"
     "git rebase main is now blocked\nEOF\n)\"",
+    'git commit -m "feat: x" -m "- handle empty input"', 'git commit -m "-no longer crashes"',
+    "git commit --message -nope", "bash -c ''", "bash ''", "git rebase --abort", "git cherry-pick --abort",
+    "git revert --quit", "git am --abort", "git rebase --help", "git am --quit",
     "git commit -F - <<-EOF\n\tgit commit --no-verify\n\tEOF", "cat <<<'git rebase'",
 ]
 for c in BLOCK:
@@ -53,6 +57,12 @@ write(repo, {"a.txt": "c"})
 run(repo, "commit", "-qam", "ok\n\nTier: T1")
 assert h[:7] in gate.retro_warning(repo)
 (repo / ".git" / "gate-ack").write_text(h + "\n")
+assert gate.retro_warning(repo) is None
+
+# gate-ack written by PowerShell 5.1 (UTF-16LE + BOM) and by UTF-8 with BOM
+(repo / ".git" / "gate-ack").write_bytes(b"\xff\xfe" + (h + "\r\n").encode("utf-16-le"))
+assert gate.retro_warning(repo) is None
+(repo / ".git" / "gate-ack").write_bytes(b"\xef\xbb\xbf" + h.encode() + b"\r\n")
 assert gate.retro_warning(repo) is None
 
 # handle_pretool
