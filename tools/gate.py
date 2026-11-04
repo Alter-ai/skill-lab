@@ -1,7 +1,10 @@
 """Tier gate for Claude Code git commits (stdlib only)."""
 import fnmatch
+import json
+import os
 import re
 import subprocess
+import tempfile
 import time
 import tomllib
 from pathlib import Path, PurePosixPath
@@ -201,3 +204,71 @@ def check_commit(repo: Path, msg: str, cfg: dict) -> list[str]:
     if not cm and any(k in ("source", "test") for _, _, k in kinds) and (oc := open_changes(repo)):
         errors.append(f"open change {oc[0]} exists: add a 'Change:' trailer")
     return errors
+
+
+def log_path(repo: Path) -> Path:
+    return (repo / git(repo, "rev-parse", "--git-common-dir").strip()) / "agent-evidence.jsonl"
+
+
+def tree_snapshot(repo: Path) -> str:
+    fd, idx = tempfile.mkstemp(prefix="gate-index-")
+    os.close(fd)
+    os.unlink(idx)  # git creates it; an empty file is not a valid index
+    env = {**os.environ, "GIT_INDEX_FILE": idx}
+    try:
+        if git(repo, "rev-parse", "--verify", "-q", "HEAD", check=False).strip():
+            git(repo, "read-tree", "HEAD", env=env)
+        git(repo, "add", "-A", env=env)
+        return git(repo, "write-tree", env=env).strip()
+    finally:
+        Path(idx).unlink(missing_ok=True)
+
+
+def append_log(repo: Path, rec: dict) -> None:
+    with log_path(repo).open("a", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+
+def read_log(repo: Path) -> list[dict]:
+    try:
+        raw = log_path(repo).read_bytes()
+    except OSError:
+        return []
+    out = []
+    for line in raw.splitlines():
+        try:
+            out.append(json.loads(line.decode("utf-8")))
+        except ValueError:  # UnicodeDecodeError and JSONDecodeError both subclass it
+            pass
+    return out
+
+
+def _is_test_cmd(cmd: str, prefixes: list[str]) -> bool:
+    for p in (" ".join(x.split()) for x in prefixes):
+        if p and (cmd == p or cmd.startswith(p + " ") or (p.endswith("/") and cmd.startswith(p))):
+            return True
+    return False
+
+
+PATH_RE = r"""docs/changes/[^\s'"`)\]]+\.md"""
+
+
+def handle_evidence(payload: dict, now: float) -> None:
+    """Record test runs and agent dispatches. Must never raise: it runs inside a tool-call hook."""
+    try:
+        event, tool, ti = payload.get("hook_event_name"), payload.get("tool_name"), payload.get("tool_input") or {}
+        repo = repo_root(Path(payload["cwd"].replace("\\", "/")))
+        cfg = load_config(repo) if repo else None
+        if cfg is None:
+            return
+        if tool in ("Bash", "PowerShell"):
+            cmd = " ".join(str(ti.get("command", "")).split())
+            if _is_test_cmd(cmd, cfg["test_commands"]):
+                append_log(repo, {"t": now, "kind": "test", "ok": event == "PostToolUse", "cmd": cmd,
+                                  "tree": tree_snapshot(repo)})
+        elif tool == "Agent" and event == "PostToolUse":
+            paths = list(dict.fromkeys(re.findall(PATH_RE, ti.get("prompt", ""))))
+            append_log(repo, {"t": now, "kind": "agent", "agent_type": ti.get("subagent_type", ""),
+                              "prompt_paths": paths})
+    except Exception:
+        return
