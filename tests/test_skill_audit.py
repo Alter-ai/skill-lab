@@ -1,4 +1,7 @@
 """Self-check for tools/skill_audit.py. Run: python -I tests/test_skill_audit.py"""
+import contextlib
+import io
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -33,4 +36,14 @@ with tempfile.TemporaryDirectory() as t:
                                   "missing-file:scripts/none.py", "missing-file:gone.md"]), fl["t:bad"]
     top = sa.overlap(skills, 90)
     assert len(top) == 1 and {top[0][3], top[0][4]} == {"t:dup1", "t:dup2"}, top
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        code = sa.main([f"t={r}", "--overlap", "90", "--json"])
+    out = json.loads(buf.getvalue())
+    assert code == 1 and out["flagged"] == 2, (code, out["flagged"])  # t:big and t:bad
+    rows = {row["skill"]: row for row in out["skills"]}
+    assert rows["t:big"]["flags"] == ["lines>500"] and rows["t:ok"]["flags"] == [], rows
+    assert rows["t:big"]["lines"] > 500, rows["t:big"]
+    assert [{o["a"], o["b"]} for o in out["overlap"]] == [{"t:dup1", "t:dup2"}], out["overlap"]
 print("ok")

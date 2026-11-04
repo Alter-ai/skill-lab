@@ -1,10 +1,11 @@
 """Static checks for SKILL.md files: size, frontmatter limits, dangling references, pairwise line overlap.
 
-usage: python tools/skill_audit.py [prefix=skills_dir ...] [--overlap PCT]
+usage: python tools/skill_audit.py [prefix=skills_dir ...] [--overlap PCT] [--json]
 Limits follow the Agent Skills spec and the Claude Code skills docs (read 2026-11-03).
 Exit code 1 when any skill is flagged, so it can gate a commit or CI.
 """
 import itertools
+import json
 import re
 import sys
 from pathlib import Path
@@ -89,11 +90,13 @@ def overlap(skills, pct):
 
 
 def main(argv):
-    roots, pct = {}, 30.0
+    roots, pct, as_json = {}, 30.0, False
     it = iter(argv)
     for a in it:
         if a == "--overlap":
             pct = float(next(it))
+        elif a == "--json":
+            as_json = True
         elif "=" in a:
             k, v = a.split("=", 1)
             roots[k] = Path(v)
@@ -101,6 +104,13 @@ def main(argv):
             sys.exit(__doc__)
     skills = load_all(roots or DEFAULT_ROOTS)
     known = {f"{k.split(':')[0]}:{s['name']}" for k, s in skills.items()} | set(skills)
+    if as_json:
+        rows = [{"skill": k, "lines": s["lines"], "bytes": s["bytes"], "name_len": len(s["name"]),
+                 "desc_len": len(s["desc"]), "flags": flags(s, known)} for k, s in sorted(skills.items())]
+        pairs = [{"pct": p, "shared": sh, "smaller": sm, "a": a, "b": b} for p, sh, sm, a, b in overlap(skills, pct)]
+        bad = sum(bool(r["flags"]) for r in rows)
+        print(json.dumps({"skills": rows, "flagged": bad, "overlap": pairs}, ensure_ascii=False, indent=2))
+        return 1 if bad else 0
     bad = 0
     print("skill | lines | KB | name | desc | flags")
     for k, s in sorted(skills.items(), key=lambda kv: -kv[1]["bytes"]):
