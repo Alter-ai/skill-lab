@@ -180,16 +180,20 @@ def architecture_ids(text: str) -> set[str]:
 
 def hunks(repo: Path, base: str) -> dict[str, list[tuple[int, int]]]:
     out: dict[str, list[tuple[int, int]]] = {}
-    cur = None
+    cur, head, prev = None, False, ""  # head: inside a file header, where "+++ " is a header and not content
     for line in git(repo, "diff", "--cached", "-U0", "--no-color", base).splitlines():
-        if line.startswith("+++ "):
+        if line.startswith("diff --git "):
+            cur, head = None, True
+        elif head and line.startswith("+++ ") and prev.startswith("--- "):
             name = line[4:].split(chr(9))[0]
             cur = None if name == "/dev/null" else name[2:].replace("\\", "/")
-        elif line.startswith("@@") and cur is not None:
+        elif line.startswith("@@"):
+            head = False
             m = re.match(r"@@ -\S+ \+(\d+)(?:,(\d+))? @@", line)
             n = int(m.group(2)) if m.group(2) is not None else 1
-            if n:
+            if cur is not None and n:
                 out.setdefault(cur, []).append((int(m.group(1)), int(m.group(1)) + n - 1))
+        prev = line
     return out
 
 
@@ -206,7 +210,12 @@ def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, ti
     errors: list[str] = []
     ct = _added(repo, change_path)[1]
     base = change_base(repo, change_path)
-    names = [p.replace("\\", "/") for p in git(repo, "diff", "--cached", "--name-only", "-M", "-z", base).split("\0") if p]
+    parts = git(repo, "diff", "--cached", "--name-status", "-M", "-z", base).split("\0")
+    names, i = [], 0  # every old and new path of this change's diff
+    while i < len(parts) and parts[i]:
+        n = 2 if parts[i][0] in "RC" else 1
+        names += [x.replace("\\", "/") for x in parts[i + 1:i + 1 + n]]
+        i += n + 1
     arch = cfg["architecture"]
     arch_text = index_text(repo, arch)
     comps = _list(fm.get("components"))
@@ -222,17 +231,18 @@ def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, ti
     hk = hunks(repo, base)
     for e in _list(fm.get("evidence")):
         path, _, ln = e.rpartition(":")
-        if not ln.isdigit() or not any(a <= int(ln) <= b for a, b in hk.get(path, [])):
+        if classify(path, cfg) == "doc" or path not in names or not ln.isdigit() or not any(a <= int(ln) <= b for a, b in hk.get(path, [])):
             errors.append(f"evidence {e!r} is not inside a changed hunk")
     vb = _list(fm.get("verified_by"))
     if not any(not v.startswith("manual:") and _is_test_cmd(" ".join(v.split()), cfg["test_commands"]) for v in vb):
         errors.append("verified_by needs at least one entry that matches test_commands")
     else:
-        ok = [r for r in read_log(repo) if r.get("kind") == "test" and r.get("ok") is True]
+        ok = [r for r in read_log(repo) if r.get("kind") == "test" and r.get("ok") is True
+              and re.fullmatch(r"[0-9a-f]{40}", str(r.get("tree", "")))]
         if not ok:
             errors.append("verified_by: no successful test run recorded")
         else:
-            tree = ok[-1].get("tree", "")
+            tree = ok[-1]["tree"]
             for p in names:
                 if classify(p, cfg) != "doc" and _blob(repo, ":" + p) != _blob(repo, f"{tree}:{p}"):
                     errors.append(f"verified_by: {p} changed after the last successful test run")

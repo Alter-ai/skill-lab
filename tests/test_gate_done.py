@@ -79,6 +79,21 @@ assert has(errs(build(reviewed="[]")), "reviewed_by")
 assert has(errs(build(tier="T3", decision=""), "T3"), "決策")
 assert errs(build(tier="T3"), "T3") == []
 
+# fix round 1
+repo = build(log_test=False)
+for rec in ({"tree": ""}, {}):
+    gate.append_log(repo, {"t": time.time(), "kind": "test", "ok": True, "cmd": "python -I tests x", **rec})
+assert has(errs(repo), "verified_by"), errs(repo)
+assert has(errs(build(evidence=f"[{CH}:3]")), "evidence")
+assert has(errs(build(evidence=f"[{ARCH_PATH}:1]", touch_arch=True)), "evidence")
+repo = build()
+run(repo, "mv", "src/a.py", "src/b.py")
+assert any(e.startswith("verified_by: src/a.py changed") for e in errs(repo)), errs(repo)
+repo = build()
+stage(repo, {"src/c.py": "x = 1" + chr(10) + "++ b/other.py" + chr(10)})
+hk = gate.hunks(repo, gate.change_base(repo, CH))
+assert "other.py" not in hk and hk["src/c.py"] == [(1, 2)], hk
+
 # base / hunks
 repo = build()
 base = gate.change_base(repo, CH)
