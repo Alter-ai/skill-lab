@@ -82,6 +82,12 @@ assert errs(r, "m\n\nTier: T3\nChange: docs/changes/c.md\n")  # tier mismatch
 stage(r, {"docs/changes/c.md": change(status="shipped")})
 assert errs(r, "m\n\nTier: T2\nChange: docs/changes/c.md\n")
 
+# T1: one M source plus one pure R100 source rename passes
+r = make_repo(BASE)
+run(r, "mv", "src/b.py", "src/d.py")
+stage(r, {"src/a.py": "a = 2\n"})
+assert errs(r, "m\n\nTier: T1\n") == []
+
 # T1 + Change pointing at a tier:T1 change must not skip the limits
 r = make_repo({**BASE, "docs/changes/c1.md": change(tier="T1")})
 stage(r, {"src/a.py": "a = 2\n", "src/b.py": "b = 2\n"})

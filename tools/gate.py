@@ -196,7 +196,7 @@ def check_commit(repo: Path, msg: str, cfg: dict) -> list[str]:
     else:
         if any(st.startswith("A") and k == "source" for st, _, k in kinds):
             errors.append("T1 cannot add a source file: this looks like T2")
-        if sum(k == "source" for _, _, k in kinds) > 1:
+        if sum(k == "source" and (st[0] in "MD" or (st[0] == "R" and st != "R100")) for st, _, k in kinds) > 1:
             errors.append("T1 allows at most one modified source file: this looks like T2")
     if not cm and any(k in ("source", "test") for _, _, k in kinds) and (oc := open_changes(repo)):
         errors.append(f"open change {oc[0]} exists: add a 'Change:' trailer")
