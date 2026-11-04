@@ -24,7 +24,11 @@ BLOCK = [
 ALLOW = [
     "git log --grep commit", "git show HEAD", 'git commit -m "fix -n flag parsing"', "ls -n",
     "git merge -n feature", "echo $CLAUDE_CODE_CHILD_SESSION", "git commit -m 'it'\"'\"'s' -m note",
-    "git commit -mnote", "git -C /r status",
+    "git commit -mnote", "git -C /r status", "grep hooksPath x", 'echo "CLAUDE_CODE_CHILD_SESSION=1"',
+    "echo git rebase main", "git commit -m 'unset CLAUDE_CODE_CHILD_SESSION core.hooksPath'",
+    "git commit -m \"$(cat <<'EOF'\nfix: core.hooksPath and unset CLAUDE_CODE_CHILD_SESSION\n"
+    "git rebase main is now blocked\nEOF\n)\"",
+    "git commit -F - <<-EOF\n\tgit commit --no-verify\n\tEOF", "cat <<<'git rebase'",
 ]
 for c in BLOCK:
     assert gate.check_pretool(c), c

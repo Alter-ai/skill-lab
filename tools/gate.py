@@ -370,66 +370,118 @@ def handle_evidence(payload: dict, now: float) -> None:
         return
 
 
-SEP_RE = re.compile(r"^[;&|]+$")
-SESSION_RE = re.compile(r"(unset|Remove-Item)\s+\S*CLAUDE_CODE_CHILD_SESSION|-u\s+CLAUDE_CODE_CHILD_SESSION"
-                        r"|CLAUDE_CODE_CHILD_SESSION\s*=")
+SEP_RE = re.compile(r"^[;&|\n]+$")
+ASSIGN_RE = re.compile(r"^[A-Za-z_]\w*=")
+HEREDOC_RE = re.compile(r"(?<!<)(<<-?[ \t]*(['\"]?)(\w+)\2[^\n]*)\n(?:.*?\n)?[ \t]*\3[ \t]*(?=\n|$)", re.S)
 BANNED_SUBS = {"cherry-pick", "revert", "rebase", "am", "commit-tree", "update-ref"}
 ARG_FLAGS = "mFCcStu"  # short flags that consume the rest of the cluster as their value
+SESSION = "CLAUDE_CODE_CHILD_SESSION"
+ENV_CMDS = {"unset", "env", "remove-item", "set-item", "clear-item", "remove-variable"}
+WRAPPERS = {"env", "command", "exec", "time", "nohup", "sudo", "nice"}
+SHELLS = {"bash", "sh", "zsh", "powershell", "pwsh", "cmd"}
 
 
 def _invocations(command: str) -> list[list[str]]:
-    out: list[list[str]] = []
-    for line in command.splitlines():
-        try:
-            toks = list(shlex.shlex(line, posix=True, punctuation_chars=True))
-        except ValueError:
-            toks = line.split()
-        cur: list[str] = []
-        for t in toks:
-            if SEP_RE.match(t):
-                out.append(cur)
-                cur = []
-            else:
-                cur.append(t)
-        out.append(cur)
+    command = HEREDOC_RE.sub(r"\1", command)  # heredoc bodies are data, not commands
+    try:
+        lex = shlex.shlex(command, posix=True, punctuation_chars=";&|()<>\n")
+        lex.whitespace = " \t\r"
+        lex.wordchars += "$:"
+        toks = list(lex)
+    except ValueError:
+        toks = [t for line in command.splitlines() for t in line.split() + ["\n"]]
+    out: list[list[str]] = [[]]
+    for t in toks:
+        if SEP_RE.match(t):
+            out.append([])
+        else:
+            out[-1].append(t)
     return [c for c in out if c]
 
 
-def _git_sub(inv: list[str]) -> tuple[str, list[str]] | None:
-    """(subcommand, args) of the git call in one invocation, skipping global options."""
-    i = next((i for i, t in enumerate(inv) if t.replace("\\", "/").rsplit("/", 1)[-1].lower() in ("git", "git.exe")), None)
-    if i is None:
+def _word(tok: str) -> str:
+    w = tok.replace("\\", "/").rsplit("/", 1)[-1].lower()
+    return w[:-4] if w.endswith(".exe") else w
+
+
+def _split(inv: list[str]) -> tuple[list[str], int]:
+    """(leading assignment tokens, index of the real command word after wrappers like env/sudo)."""
+    i = 0
+    while i < len(inv) and (ASSIGN_RE.match(inv[i]) or inv[i] == "export"):
+        i += 1
+    assigns = [t for t in inv[:i] if t != "export"]
+    while i < len(inv) and _word(inv[i]) in WRAPPERS:
+        i += 1
+        while i < len(inv) and (inv[i].startswith("-") or ASSIGN_RE.match(inv[i])):
+            i += 1
+    return assigns, i
+
+
+def _git_sub(inv: list[str]) -> tuple[str, list[str], list[str]] | None:
+    """(subcommand, args, global-option tokens) when the invocation's command word is git."""
+    i = _split(inv)[1]
+    if i >= len(inv) or _word(inv[i]) != "git":
         return None
     i += 1
+    start = i
     while i < len(inv) and inv[i].startswith("-"):
         i += 2 if inv[i] in ("-c", "-C", "--git-dir", "--work-tree", "--namespace", "--exec-path") else 1
-    return (inv[i], inv[i + 1:]) if i < len(inv) else None
+    return (inv[i], inv[i + 1:], inv[start:i]) if i < len(inv) else None
+
+
+def _check_inv(inv: list[str]) -> str | None:
+    assigns, ci = _split(inv)
+    cmd = _word(inv[ci]) if ci < len(inv) else ""
+    low = [t.lower() for t in inv]
+    if any(t.startswith(SESSION + "=") for t in assigns):
+        return f"{SESSION} must not be changed"
+    if any("hookspath" in t.lower() for t in assigns):
+        return "core.hooksPath must not be set"
+    for j, t in enumerate(inv):
+        if t.lower().startswith("$env:" + SESSION.lower()) and (
+                "=" in t or (j + 1 < len(inv) and inv[j + 1].startswith("="))):
+            return f"{SESSION} must not be changed"
+    if any(_word(t) in ENV_CMDS for t in inv[:ci + 1]) and any(SESSION in t for t in inv[ci:]):
+        return f"{SESSION} must not be unset or changed"
+    if any("setenvironmentvariable" in t for t in low) and any(
+            SESSION in t and "setenvironmentvariable" not in t.lower() for t in inv):
+        return f"{SESSION} must not be changed"
+    if cmd in SHELLS:
+        rest = inv[ci + 1:]
+        spaced = [t for t in rest if re.search(r"\s", t)]
+        for s in spaced or ([" ".join(rest)] if cmd != "bash" and cmd != "sh" and cmd != "zsh" else []):
+            r = check_pretool(s)
+            if r:
+                return r
+    g = _git_sub(inv)
+    if g is None:
+        return None
+    sub, args, gl = g
+    if any("hookspath" in t.lower() for t in gl) or (sub == "config" and any("hookspath" in a.lower() for a in args)):
+        return "core.hooksPath must not be set"
+    if cmd == "env" or any(_word(t) == "env" for t in inv[:ci]):
+        if "-i" in inv[:ci + 1] or "--ignore-environment" in inv[:ci + 1]:
+            return "env -i hides CLAUDE_CODE_CHILD_SESSION from git"
+    if sub in BANNED_SUBS:
+        return f"git {sub} bypasses the commit-msg hook"
+    if sub in ("commit", "merge") and any(len(a) >= 6 and "--no-verify".startswith(a) for a in args):
+        return f"git {sub} --no-verify bypasses hooks"
+    if sub == "commit":
+        for a in args:
+            if a.startswith("-") and not a.startswith("--"):
+                for ch in a[1:]:
+                    if ch == "n":
+                        return "git commit -n bypasses hooks"
+                    if ch in ARG_FLAGS:
+                        break
+    return None
 
 
 def check_pretool(command: str) -> str | None:
-    if re.search(r"hookspath", command, re.I):
-        return "core.hooksPath must not be set"
-    if SESSION_RE.search(command) or ("SetEnvironmentVariable" in command and "CLAUDE_CODE_CHILD_SESSION" in command):
-        return "CLAUDE_CODE_CHILD_SESSION must not be unset or changed"
     for inv in _invocations(command):
-        g = _git_sub(inv)
-        if g is None:
-            continue
-        sub, args = g
-        if "env" in inv and ("-i" in inv or "--ignore-environment" in inv):
-            return "env -i hides CLAUDE_CODE_CHILD_SESSION from git"
-        if sub in BANNED_SUBS:
-            return f"git {sub} bypasses the commit-msg hook"
-        if sub in ("commit", "merge") and "--no-verify" in args:
-            return f"git {sub} --no-verify bypasses hooks"
-        if sub == "commit":
-            for a in args:
-                if a.startswith("-") and not a.startswith("--"):
-                    for ch in a[1:]:
-                        if ch == "n":
-                            return "git commit -n bypasses hooks"
-                        if ch in ARG_FLAGS:
-                            break
+        r = _check_inv(inv)
+        if r:
+            return r
     return None
 
 
