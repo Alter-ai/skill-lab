@@ -93,6 +93,19 @@ update auth.ts
 - `docs` — Documentation only
 - `chore` — Tooling, dependencies, config
 
+### Tier and Change trailers
+
+In repos with an `.agent-gate` file, commits made by Claude end with git trailers (see the change-record skill for the rules):
+
+```
+feat: add login rate limit
+
+Tier: T2
+Change: docs/changes/2026-11-04-login-rate-limit.md
+```
+
+`Tier:` is `T0`-`T3` and is required on every commit; `Change:` is required for T2/T3 and while a change is open. The first paragraph of a PR description highlights only `manual:` items, `reviewed_by`, and any retro warning about commits missing `Tier:`.
+
 ### 4. Keep Concerns Separate
 
 Don't combine formatting changes with behavior changes. Don't combine refactors with features. Each type of change should be a separate commit — and ideally a separate PR:

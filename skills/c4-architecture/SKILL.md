@@ -313,6 +313,7 @@ elements:
     name: API
     tech: Node.js
     description: REST API for orders
+    behavior: [Rejects orders without stock]   # what it guarantees now
     code: src/server/      # repo path; omit for external systems and people
     parent: shop           # optional: enclosing system/container/node id
 relations:
@@ -326,6 +327,8 @@ relations:
 Rules:
 - One element appears **once** in the YAML even if it shows up in several diagrams; reuse the same alias in every diagram.
 - Every `Rel` in any diagram has a matching YAML relation (same `from`, `to`, `label`); nothing in the YAML is missing from the diagrams.
+- `behavior` lists what the element guarantees now; update it when a change alters behavior.
+- Existing projects may list only the elements a change touches.
 - Point the repo's `CLAUDE.md` / `AGENTS.md` at the file: "Architecture: read `docs/architecture/ARCHITECTURE.md`."
 
 ## Exporting Images (for Word or slides)
