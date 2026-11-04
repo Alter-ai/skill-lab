@@ -156,9 +156,94 @@ def open_changes(repo: Path) -> list[str]:
     return out
 
 
+def _added(repo: Path, change_path: str) -> tuple[str, int | None]:
+    """(base, committer time) of the oldest commit that added the file; ("", None) if never committed."""
+    lines = git(repo, "log", "--diff-filter=A", "--format=%H %ct", "--", change_path, check=False).splitlines()
+    lines = [l for l in lines if l.strip()]
+    if not lines:
+        return "", None
+    sha, ct = lines[-1].split()
+    parent = git(repo, "rev-parse", "-q", "--verify", sha + "^", check=False).strip()
+    return (parent or EMPTY_TREE), int(ct)
+
+
+def change_base(repo: Path, change_path: str) -> str:
+    base = _added(repo, change_path)[0]
+    if base:
+        return base
+    return "HEAD" if git(repo, "rev-parse", "-q", "--verify", "HEAD", check=False).strip() else EMPTY_TREE
+
+
+def architecture_ids(text: str) -> set[str]:
+    return {_scalar(m.group(1)) for m in re.finditer(r"^\s*-\s+id:\s*(.+)$", section(text, "AI structured data"), re.M)}
+
+
+def hunks(repo: Path, base: str) -> dict[str, list[tuple[int, int]]]:
+    out: dict[str, list[tuple[int, int]]] = {}
+    cur = None
+    for line in git(repo, "diff", "--cached", "-U0", "--no-color", base).splitlines():
+        if line.startswith("+++ "):
+            name = line[4:].split(chr(9))[0]
+            cur = None if name == "/dev/null" else name[2:].replace("\\", "/")
+        elif line.startswith("@@") and cur is not None:
+            m = re.match(r"@@ -\S+ \+(\d+)(?:,(\d+))? @@", line)
+            n = int(m.group(2)) if m.group(2) is not None else 1
+            if n:
+                out.setdefault(cur, []).append((int(m.group(1)), int(m.group(1)) + n - 1))
+    return out
+
+
+def _blob(repo: Path, spec: str) -> str:
+    return git(repo, "rev-parse", "-q", "--verify", spec, check=False).strip()
+
+
+def _list(v) -> list[str]:
+    return v if isinstance(v, list) else ([v] if v else [])
+
+
 def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, tier: str,
                 now: float) -> list[str]:
-    return []  # Task 5
+    errors: list[str] = []
+    ct = _added(repo, change_path)[1]
+    base = change_base(repo, change_path)
+    names = [p.replace("\\", "/") for p in git(repo, "diff", "--cached", "--name-only", "-M", "-z", base).split("\0") if p]
+    arch = cfg["architecture"]
+    arch_text = index_text(repo, arch)
+    comps = _list(fm.get("components"))
+    if not comps:
+        errors.append("components must be non-empty")
+    elif arch_text is None:
+        errors.append(f"components cannot be checked: {arch} is missing, create it")
+    else:
+        ids = architecture_ids(arch_text)
+        errors += [f"components: unknown id {c!r}" for c in comps if c not in ids]
+    if section(body, "行為改變") and arch not in names:
+        errors.append(f"behavior changed but {arch} was not updated in this change")
+    hk = hunks(repo, base)
+    for e in _list(fm.get("evidence")):
+        path, _, ln = e.rpartition(":")
+        if not ln.isdigit() or not any(a <= int(ln) <= b for a, b in hk.get(path, [])):
+            errors.append(f"evidence {e!r} is not inside a changed hunk")
+    vb = _list(fm.get("verified_by"))
+    if not any(not v.startswith("manual:") and _is_test_cmd(" ".join(v.split()), cfg["test_commands"]) for v in vb):
+        errors.append("verified_by needs at least one entry that matches test_commands")
+    else:
+        ok = [r for r in read_log(repo) if r.get("kind") == "test" and r.get("ok") is True]
+        if not ok:
+            errors.append("verified_by: no successful test run recorded")
+        else:
+            tree = ok[-1].get("tree", "")
+            for p in names:
+                if classify(p, cfg) != "doc" and _blob(repo, ":" + p) != _blob(repo, f"{tree}:{p}"):
+                    errors.append(f"verified_by: {p} changed after the last successful test run")
+    if not _list(fm.get("reviewed_by")):
+        errors.append("reviewed_by must be non-empty")
+    elif not any(r.get("kind") == "agent" and change_path in r.get("prompt_paths", [])
+                 and (ct is None or r.get("t", 0) >= ct) for r in read_log(repo)):
+        errors.append("reviewed_by: no reviewer agent was dispatched for this change file")
+    if tier == "T3" and not section(body, "決策"):
+        errors.append("T3 change needs a non-empty 決策 section")
+    return errors
 
 
 def check_commit(repo: Path, msg: str, cfg: dict) -> list[str]:
