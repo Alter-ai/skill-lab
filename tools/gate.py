@@ -5,6 +5,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import tempfile
 import time
 import tomllib
@@ -526,3 +527,91 @@ def handle_pretool(payload: dict) -> tuple[int, str]:
         if text:
             return 0, json.dumps({"systemMessage": text}, ensure_ascii=False)
     return 0, ""
+
+
+MARKER = "# installed by gate.py"
+BLOCK_HEADER = "gate: blocked (see skill change-record)"
+
+
+def install(repo: Path, gate_path: str) -> str:
+    if git(repo, "config", "--local", "--get", "core.hooksPath", check=False).strip():
+        raise RuntimeError("refusing to install: core.hooksPath is set in this repo's local config")
+    hooks = (repo / git(repo, "rev-parse", "--git-path", "hooks").strip()).resolve()
+    hooks.mkdir(parents=True, exist_ok=True)
+    hook = hooks / "commit-msg"
+    if hook.exists() and MARKER not in hook.read_text(encoding="utf-8", errors="replace"):
+        hook.replace(hooks / "commit-msg.local")
+    py = sys.executable.replace("\\", "/")
+    gp = gate_path.replace("\\", "/")
+    hook.write_bytes(("#!/bin/sh\n" + MARKER + "\n"
+                      'hooks="$(dirname "$0")"\n'
+                      'if [ -f "$hooks/commit-msg.local" ]; then "$hooks/commit-msg.local" "$@" || exit $?; fi\n'
+                      f'exec "{py}" -I "{gp}" commit-msg "$1"\n').encode("utf-8"))
+    hook.chmod(0o755)
+    return f"installed commit-msg hook in {hooks.as_posix()}"
+
+
+def _commit_msg(path: str) -> int:
+    if os.environ.get("CLAUDE_CODE_CHILD_SESSION") != "1":
+        return 0
+    repo = repo_root(Path.cwd())
+    if repo is None:
+        return 0
+    try:
+        cfg = load_config(repo)
+    except tomllib.TOMLDecodeError as e:
+        print(f"{BLOCK_HEADER}\nmalformed .agent-gate: {e}", file=sys.stderr)
+        return 1
+    if cfg is None:
+        return 0
+    msg = Path(path).read_text(encoding="utf-8", errors="replace")
+    errs = check_commit(repo, msg, cfg)
+    append_log(repo, {"t": time.time(), "kind": "gate", "decision": "block" if errs else "allow",
+                      "reason": "; ".join(errs)})
+    if errs:
+        print("\n".join([BLOCK_HEADER, *errs]), file=sys.stderr)
+        return 1
+    return 0
+
+
+def _stdin_json():
+    try:
+        return json.loads(sys.stdin.buffer.read().decode("utf-8", errors="replace"))
+    except ValueError:
+        return None
+
+
+def main(argv: list[str]) -> int:
+    cmd = argv[0] if argv else ""
+    if cmd == "commit-msg" and len(argv) == 2:
+        return _commit_msg(argv[1])
+    if cmd == "pretool" and len(argv) == 1:
+        payload = _stdin_json()
+        if not isinstance(payload, dict):
+            return 0
+        code, out = handle_pretool(payload)
+        if out:
+            print(out, file=sys.stderr if code == 2 else sys.stdout)
+        return code
+    if cmd == "evidence" and len(argv) == 1:
+        payload = _stdin_json()
+        if isinstance(payload, dict):
+            handle_evidence(payload, time.time())
+        return 0
+    if cmd == "install" and len(argv) == 1:
+        repo = repo_root(Path.cwd())
+        if repo is None:
+            print("gate: not in a git repository", file=sys.stderr)
+            return 1
+        try:
+            print(install(repo, str(Path(__file__).resolve())))
+        except RuntimeError as e:
+            print(f"gate: {e}", file=sys.stderr)
+            return 1
+        return 0
+    print("usage: gate.py commit-msg <file> | pretool | evidence | install", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
