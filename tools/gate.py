@@ -2,6 +2,7 @@
 import fnmatch
 import re
 import subprocess
+import time
 import tomllib
 from pathlib import Path, PurePosixPath
 
@@ -110,3 +111,85 @@ def section(body: str, heading_prefix: str) -> str:
         elif on:
             out.append(line)
     return "\n".join(out).strip()
+
+
+EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+STATUSES = {"proposed", "partial", "done", "abandoned"}
+TIER_RE = re.compile(r"^Tier: (T[0-3])$", re.M)
+CHANGE_RE = re.compile(r"^Change: (docs/changes/\S+\.md)$", re.M)
+
+
+def staged(repo: Path) -> list[tuple[str, str]]:
+    base = "HEAD" if git(repo, "rev-parse", "-q", "--verify", "HEAD", check=False).strip() else EMPTY_TREE
+    parts = git(repo, "diff", "--cached", "--name-status", "-M", "-z", base).split("\0")
+    out, i = [], 0
+    while i < len(parts) and parts[i]:
+        st = parts[i]
+        n = 2 if st[0] in "RC" else 1  # rename/copy carry old and new path; keep the new one
+        out.append((st, parts[i + n].replace("\\", "/")))
+        i += n + 1
+    return out
+
+
+def index_text(repo: Path, path: str) -> str | None:
+    try:
+        return git(repo, "show", f":{path}")
+    except subprocess.CalledProcessError:
+        return None
+
+
+def open_changes(repo: Path) -> list[str]:
+    out = []
+    for p in git(repo, "ls-files", "-z", "--", "docs/changes").split("\0"):
+        if p.endswith(".md") and p.count("/") == 2:
+            fm, _ = parse_front_matter(index_text(repo, p) or "")
+            if fm.get("status") in ("proposed", "partial"):
+                out.append(p)
+    return out
+
+
+def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, tier: str,
+                now: float) -> list[str]:
+    return []  # Task 5
+
+
+def check_commit(repo: Path, msg: str, cfg: dict) -> list[str]:
+    msg = "\n".join(l for l in msg.replace("\r\n", "\n").split("\n") if not l.startswith("#"))
+    m = TIER_RE.search(msg)
+    if not m:
+        return ["missing 'Tier: T0|T1|T2|T3' trailer in commit message"]
+    tier = m.group(1)
+    if git(repo, "rev-parse", "-q", "--verify", "MERGE_HEAD", check=False).strip():
+        return []
+    files = staged(repo)
+    cm = CHANGE_RE.search(msg)
+    errors: list[str] = []
+    if cm:
+        path = cm.group(1)
+        text = index_text(repo, path)
+        if text is None:
+            return [f"Change file not found in index: {path}"]
+        fm, body = parse_front_matter(text)
+        if fm.get("status") not in STATUSES:
+            errors.append(f"{path}: status must be one of {sorted(STATUSES)}")
+        if fm.get("tier") != tier:
+            errors.append(f"{path}: tier {fm.get('tier')!r} does not match commit Tier {tier}")
+        if fm.get("status") == "done":
+            errors += verify_done(repo, path, fm, body, cfg, tier, time.time())
+        return errors
+    if tier in ("T2", "T3"):
+        return [f"Tier {tier} requires a 'Change: docs/changes/<name>.md' trailer"]
+    kinds = [(st, p, classify(p, cfg)) for st, p in files]
+    if any(k == "high" and st != "R100" for st, _, k in kinds):
+        errors.append("sensitive or high-risk path staged: this looks like T2")
+    if tier == "T0":
+        if any(st != "R100" and k in ("source", "test") for st, _, k in kinds):
+            errors.append("T0 allows only docs/config changes or pure renames: this looks like T2")
+    else:
+        if any(st.startswith("A") and k == "source" for st, _, k in kinds):
+            errors.append("T1 cannot add a source file: this looks like T2")
+        if sum(k == "source" for _, _, k in kinds) > 1:
+            errors.append("T1 allows at most one modified source file: this looks like T2")
+    if any(k in ("source", "test") for _, _, k in kinds) and (oc := open_changes(repo)):
+        errors.append(f"open change {oc[0]} exists: add a 'Change:' trailer")
+    return errors
