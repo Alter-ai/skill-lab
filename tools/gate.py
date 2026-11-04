@@ -3,6 +3,7 @@ import fnmatch
 import json
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 import time
@@ -367,3 +368,106 @@ def handle_evidence(payload: dict, now: float) -> None:
                               "prompt_paths": paths})
     except Exception:
         return
+
+
+SEP_RE = re.compile(r"^[;&|]+$")
+SESSION_RE = re.compile(r"(unset|Remove-Item)\s+\S*CLAUDE_CODE_CHILD_SESSION|-u\s+CLAUDE_CODE_CHILD_SESSION"
+                        r"|CLAUDE_CODE_CHILD_SESSION\s*=")
+BANNED_SUBS = {"cherry-pick", "revert", "rebase", "am", "commit-tree", "update-ref"}
+ARG_FLAGS = "mFCcStu"  # short flags that consume the rest of the cluster as their value
+
+
+def _invocations(command: str) -> list[list[str]]:
+    out: list[list[str]] = []
+    for line in command.splitlines():
+        try:
+            toks = list(shlex.shlex(line, posix=True, punctuation_chars=True))
+        except ValueError:
+            toks = line.split()
+        cur: list[str] = []
+        for t in toks:
+            if SEP_RE.match(t):
+                out.append(cur)
+                cur = []
+            else:
+                cur.append(t)
+        out.append(cur)
+    return [c for c in out if c]
+
+
+def _git_sub(inv: list[str]) -> tuple[str, list[str]] | None:
+    """(subcommand, args) of the git call in one invocation, skipping global options."""
+    i = next((i for i, t in enumerate(inv) if t.replace("\\", "/").rsplit("/", 1)[-1].lower() in ("git", "git.exe")), None)
+    if i is None:
+        return None
+    i += 1
+    while i < len(inv) and inv[i].startswith("-"):
+        i += 2 if inv[i] in ("-c", "-C", "--git-dir", "--work-tree", "--namespace", "--exec-path") else 1
+    return (inv[i], inv[i + 1:]) if i < len(inv) else None
+
+
+def check_pretool(command: str) -> str | None:
+    if re.search(r"hookspath", command, re.I):
+        return "core.hooksPath must not be set"
+    if SESSION_RE.search(command) or ("SetEnvironmentVariable" in command and "CLAUDE_CODE_CHILD_SESSION" in command):
+        return "CLAUDE_CODE_CHILD_SESSION must not be unset or changed"
+    for inv in _invocations(command):
+        g = _git_sub(inv)
+        if g is None:
+            continue
+        sub, args = g
+        if "env" in inv and ("-i" in inv or "--ignore-environment" in inv):
+            return "env -i hides CLAUDE_CODE_CHILD_SESSION from git"
+        if sub in BANNED_SUBS:
+            return f"git {sub} bypasses the commit-msg hook"
+        if sub in ("commit", "merge") and "--no-verify" in args:
+            return f"git {sub} --no-verify bypasses hooks"
+        if sub == "commit":
+            for a in args:
+                if a.startswith("-") and not a.startswith("--"):
+                    for ch in a[1:]:
+                        if ch == "n":
+                            return "git commit -n bypasses hooks"
+                        if ch in ARG_FLAGS:
+                            break
+    return None
+
+
+def retro_warning(repo: Path) -> str | None:
+    added = git(repo, "log", "--diff-filter=A", "--format=%H", "--", ".agent-gate", check=False).split()
+    if not added:
+        return None
+    ack_file = repo / git(repo, "rev-parse", "--git-common-dir").strip() / "gate-ack"
+    ack = set(ack_file.read_text(encoding="utf-8").split()) if ack_file.is_file() else set()
+    miss = []
+    for h in git(repo, "log", "--format=%H", f"{added[-1]}..HEAD").split():
+        msg = git(repo, "show", "-s", "--format=%B", h)
+        if not TIER_RE.search(msg.replace("\r\n", "\n")) and h not in ack and h[:7] not in ack:
+            miss.append(h[:7])
+    if not miss:
+        return None
+    return ("gate: commits without a Tier trailer since .agent-gate was added: " + ", ".join(miss)
+            + ". Acknowledge by adding the hash to .git/gate-ack.")
+
+
+def handle_pretool(payload: dict) -> tuple[int, str]:
+    if payload.get("tool_name") not in ("Bash", "PowerShell"):
+        return 0, ""
+    cmd = str((payload.get("tool_input") or {}).get("command", ""))
+    repo = repo_root(Path(str(payload.get("cwd", ".")).replace("\\", "/")))
+    if repo is None or not (repo / ".agent-gate").is_file():
+        return 0, ""
+    try:
+        load_config(repo)
+    except tomllib.TOMLDecodeError:
+        if re.search(r"\bgit\b", cmd):
+            return 2, "gate: blocked (see skill change-record)\n.agent-gate is malformed; fix it first"
+        return 0, ""
+    reason = check_pretool(cmd)
+    if reason:
+        return 2, "gate: blocked (see skill change-record)\n" + reason
+    if any((g := _git_sub(i)) and g[0] in ("commit", "merge") for i in _invocations(cmd)):
+        text = retro_warning(repo)
+        if text:
+            return 0, json.dumps({"systemMessage": text}, ensure_ascii=False)
+    return 0, ""
