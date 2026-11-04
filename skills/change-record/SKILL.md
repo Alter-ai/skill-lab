@@ -51,16 +51,16 @@ architecture  = "docs/architecture/ARCHITECTURE.md"                             
 
 ## Gate rules (commit-msg)
 
-1. File classes (matched by path segment, so `inspect.py` is not a test): docs (`*.md`, `*.txt`, `docs/`), low-risk config (other json/yaml/toml/ini), high-risk (`.github/`, CI files, dependency manifests and lockfiles, `.claude/`, `.agent-gate`, and `.agent-gate` `sensitive` globs), tests, source (everything else).
+1. File classes (matched by path segment, so `inspect.py` is not a test): docs (`*.md`, `*.rst`, `*.txt`, `docs/`), low-risk config (other json/yaml/yml/toml/ini/cfg), high-risk (`.github/workflows/`, CI files, dependency manifests and lockfiles, `.claude/`, `.agent-gate`, and `.agent-gate` `sensitive` globs), tests, source (everything else).
 2. Every commit needs `Tier: T0`-`T3`. T0: docs, low-risk config or pure renames only. T1: at most one modified non-test source file, no new source files, no high-risk paths. Otherwise it is T2.
 3. T2/T3 need `Change: docs/changes/<file>.md`, and the file must exist in the index. The change file `tier` must be T2 or T3 and equal the commit's Tier. Every commit that belongs to a T2/T3 change carries that change's Tier and Change trailers. While any change is `proposed` or `partial`, every commit touching source or test files must carry `Change:`, whatever its Tier.
 4. Every commit: front matter `tier` matches the trailer and `status` is valid.
 5. Full verification runs only on the commit that sets `status: done`. "This change" means the cumulative diff from the parent of the commit where the change file first appeared up to the index.
    - Every component exists in ARCHITECTURE.md's YAML.
-   - If `## 行為改變` is non-empty, ARCHITECTURE.md must have changed within the change. To skip this, state in the change file that there is no behavior change.
+   - If `## 行為改變` is non-empty, ARCHITECTURE.md must have changed within the change. If there is no behavior change, leave `## 行為改變` empty (the empty heading stays visible to the human reviewer).
    - Every `evidence` `path:line` points into this change's diff and is not a doc file.
    - `verified_by` has at least one entry matching `test_commands`, and the last successful recorded test run tested exactly the code being committed. Re-run the tests after the final code edit, from the repo's own directory as the session working directory.
-   - `reviewed_by` is non-empty and a subagent was dispatched whose prompt contains the change file's path.
+   - `reviewed_by` is non-empty and a subagent was dispatched whose prompt contains the change file's path, and the dispatch happened at or after the commit that first added the change file.
    - T3 also needs a non-empty `## 決策` section.
 6. Merge commits: only the `Tier:` trailer is checked.
 

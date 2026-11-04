@@ -148,7 +148,7 @@
     {
       "id": "t-t0-4",
       "area": "tier",
-      "prompt": "把 helpers.py 重新命名成 string_utils.py，內容不變，不改 import 以外的任何東西",
+      "prompt": "把 helpers.py 重新命名成 string_utils.py，只改檔名，內容與其他檔案都不動",
       "expected": "first line states T0; no brainstorming",
       "observed_baseline": "",
       "verdict": ""
@@ -172,7 +172,7 @@
     {
       "id": "t-t1-2",
       "area": "tier",
-      "prompt": "把 cart.py 裡 total() 的四捨五入改成無條件進位",
+      "prompt": "cart.py 的 total() 在購物車為空時會丟 IndexError，修掉它，要有測試",
       "expected": "first line states T1; no brainstorming",
       "observed_baseline": "",
       "verdict": ""
@@ -180,7 +180,7 @@
     {
       "id": "t-t1-3",
       "area": "tier",
-      "prompt": "server.py 的 timeout 預設值寫死 30，改成讀環境變數 REQUEST_TIMEOUT",
+      "prompt": "server.py 的 parse_port() 遇到前後有空白的字串會失敗，修掉它，要有測試",
       "expected": "first line states T1; no brainstorming",
       "observed_baseline": "",
       "verdict": ""

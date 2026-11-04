@@ -1,6 +1,7 @@
 <!--
 INSTALLED 2026-11-03 as ~/.claude/CLAUDE.md, body only (this comment omitted there). Keep the two in sync by hand.
-The five rules were accepted by the user as written.
+2026-11-04: rules 1-3 replaced by the tier table, pending deployment (Task 10); the installed file still has the old rules until then.
+Rules 4-8 keep their numbers because other files and replies cite them (e.g. rule 5 for conflicts, rule 8 for skill-lab).
 using-superpowers states that CLAUDE.md instructions take precedence over skills, which is why this layer can settle conflicts.
 Keep this file short: it is injected every turn.
 -->
@@ -12,8 +13,8 @@ Keep this file short: it is injected every turn.
 |---|---|---|---|
 | T0 瑣碎 | 只動文件或低風險設定，或純改名 | 直接改 | 自審 |
 | T1 小修 | 最多改一個既有非測試原始碼檔、不新增原始碼檔、不改對外行為 | bug 修復先寫會失敗的測試 | 自審 |
-| T2 功能 | 新行為、多檔改動，或碰到高風險設定或敏感路徑 | brainstorming bounded 路徑 → TDD | fresh-context reviewer，只給 diff 和需求；每條結論附 `path:line` 或實際跑過的指令 |
-| T3 架構 | 新專案或子系統、改公開介面、需要重組結構 | brainstorming 全流程 → spec → writing-plans → 子代理逐任務執行 | 每個 task 一次，再加整支 branch 一次 |
+| T2 功能 | 新行為、多檔改動，或碰到高風險設定或敏感路徑 | brainstorming bounded 路徑 → TDD | fresh-context reviewer，只給 diff 和需求，不附作者結論；每條結論附 `path:line` 或實際跑過的指令 |
+| T3 架構 | 新專案或子系統、改公開介面、需要重組結構 | brainstorming 全流程 → spec → writing-plans → 子代理逐任務執行 | 每個 task 一次，最後整支 branch 的 final review |
 
 - 被 gate 擋下時只能補齊或停下來問人；不得繞過、降級 Tier 或修改 gate 相關檔案。
 - T3 的 spec 和 plan 寫在 `docs/changes/`。
