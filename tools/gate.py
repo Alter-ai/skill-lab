@@ -1,5 +1,6 @@
 """Tier gate for Claude Code git commits (stdlib only)."""
 import fnmatch
+import re
 import subprocess
 import tomllib
 from pathlib import Path, PurePosixPath
@@ -60,3 +61,52 @@ def classify(path: str, cfg: dict) -> str:
     if p.suffix in CONFIG_EXTS:
         return "config"
     return "source"
+
+
+def _scalar(v: str) -> str:
+    v = v.strip()
+    if v and v[0] in "\"'":
+        end = v.find(v[0], 1)
+        if end > 0:
+            return v[1:end]
+    return re.split(r"\s+#", v, maxsplit=1)[0].strip()
+
+
+def parse_front_matter(text: str) -> tuple[dict, str]:
+    # shortcut: flat key/scalar/list subset of YAML only, upgrade if change files need nesting
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return {}, text
+    for end in range(1, len(lines)):
+        if lines[end].strip() == "---":
+            break
+    else:
+        return {}, text
+    fm: dict = {}
+    key = None
+    for line in lines[1:end]:
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("- ") and key is not None and isinstance(fm[key], list):
+            fm[key].append(_scalar(s[2:]))
+            continue
+        k, _, v = line.partition(":")
+        key, v = k.strip(), _scalar(v)
+        if v.startswith("[") and v.endswith("]"):
+            fm[key] = [_scalar(x) for x in v[1:-1].split(",") if x.strip()]
+        else:
+            fm[key] = [] if v == "" else v
+    return fm, "".join(lines[end + 1:])
+
+
+def section(body: str, heading_prefix: str) -> str:
+    out, on = [], False
+    for line in body.splitlines():
+        if line.startswith("## "):
+            if on:
+                break
+            on = line.startswith("## " + heading_prefix)
+        elif on:
+            out.append(line)
+    return "\n".join(out).strip()
