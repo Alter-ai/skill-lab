@@ -370,7 +370,7 @@ def handle_evidence(payload: dict, now: float) -> None:
         return
 
 
-SEP_RE = re.compile(r"^[;&|\n]+$")
+SEP_RE = re.compile(r"^([;&|()\n]+|[{}])$")
 ASSIGN_RE = re.compile(r"^[A-Za-z_]\w*=")
 HEREDOC_RE = re.compile(r"(?<!<)(<<-?[ \t]*(['\"]?)(\w+)\2[^\n]*)\n(?:.*?\n)?[ \t]*\3[ \t]*(?=\n|$)", re.S)
 BANNED_SUBS = {"cherry-pick", "revert", "rebase", "am", "commit-tree", "update-ref"}
@@ -441,16 +441,15 @@ def _check_inv(inv: list[str]) -> str | None:
         if t.lower().startswith("$env:" + SESSION.lower()) and (
                 "=" in t or (j + 1 < len(inv) and inv[j + 1].startswith("="))):
             return f"{SESSION} must not be changed"
-    if any(_word(t) in ENV_CMDS for t in inv[:ci + 1]) and any(SESSION in t for t in inv[ci:]):
+    if any(_word(t) in ENV_CMDS for t in inv[:ci + 1]) and any(SESSION in t for t in inv):
         return f"{SESSION} must not be unset or changed"
-    if any("setenvironmentvariable" in t for t in low) and any(
-            SESSION in t and "setenvironmentvariable" not in t.lower() for t in inv):
-        return f"{SESSION} must not be changed"
     if cmd in SHELLS:
         rest = inv[ci + 1:]
         spaced = [t for t in rest if re.search(r"\s", t)]
-        for s in spaced or ([" ".join(rest)] if cmd != "bash" and cmd != "sh" and cmd != "zsh" else []):
-            r = check_pretool(s)
+        while rest and rest[0][0] in "-/":
+            rest = rest[1:]
+        for sub_cmd in spaced or [" ".join(rest)]:
+            r = check_pretool(sub_cmd)
             if r:
                 return r
     g = _git_sub(inv)
@@ -478,7 +477,11 @@ def _check_inv(inv: list[str]) -> str | None:
 
 
 def check_pretool(command: str) -> str | None:
-    for inv in _invocations(command):
+    invs = _invocations(command)
+    flat = [t for inv in invs for t in inv]
+    if any("setenvironmentvariable" in t.lower() for t in flat) and any(SESSION in t for t in flat):
+        return f"{SESSION} must not be changed"
+    for inv in invs:
         r = _check_inv(inv)
         if r:
             return r

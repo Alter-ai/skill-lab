@@ -20,6 +20,12 @@ BLOCK = [
     "git commit-tree t", "git update-ref refs/heads/x y", "git -C /r rebase main",
     "git add . && git commit --no-verify -m x", "git merge --no-verify feature",
     "echo hi\ngit rebase main",
+    "git commit --no-verif -m x", "git commit --no-v -m x", "bash -c 'git commit --no-verify -m x'",
+    'powershell -Command "git commit --no-verify"', "powershell -Command git rebase main",
+    "pwsh -Command git rebase main", "cmd /c git rebase main", 'sh -c "git cherry-pick x"',
+    "env --unset=CLAUDE_CODE_CHILD_SESSION git commit -m x", "env -u CLAUDE_CODE_CHILD_SESSION git commit -m x",
+    "unset -v CLAUDE_CODE_CHILD_SESSION", "Set-Item Env:CLAUDE_CODE_CHILD_SESSION ''",
+    "export GIT_CONFIG_KEY_0=core.hooksPath", "(git rebase main)", "{ git rebase main; }",
 ]
 ALLOW = [
     "git log --grep commit", "git show HEAD", 'git commit -m "fix -n flag parsing"', "ls -n",
