@@ -6,9 +6,19 @@ Keep this file short: it is injected every turn.
 -->
 # Skill 優先順序（使用者規則，優先於任何 skill）
 
-1. 新功能或行為改變：先 brainstorming，核准前不寫程式。單檔、需求明確、不改行為的小修：直接做最小改動，不走 brainstorming。
-2. 測試：bug 修復與新的非瑣碎邏輯先寫會失敗的測試。文字、設定、重新命名等瑣碎改動免測試。
-3. Review：合併前與大改動派獨立 reviewer 子代理。小改動自己審，並說明看了什麼。
+風險分級，每次回覆第一行標出級別；只能升級，不能降級。bug 修復依改動範圍分級。gate 細節見 change-record skill。
+
+| 級 | 判斷條件 | 流程 | 審查 |
+|---|---|---|---|
+| T0 瑣碎 | 只動文件或低風險設定，或純改名 | 直接改 | 自審 |
+| T1 小修 | 最多改一個既有非測試原始碼檔、不新增原始碼檔、不改對外行為 | bug 修復先寫會失敗的測試 | 自審 |
+| T2 功能 | 新行為、多檔改動，或碰到高風險設定或敏感路徑 | brainstorming bounded 路徑 → TDD | fresh-context reviewer，只給 diff 和需求；每條結論附 `path:line` 或實際跑過的指令 |
+| T3 架構 | 新專案或子系統、改公開介面、需要重組結構 | brainstorming 全流程 → spec → writing-plans → 子代理逐任務執行 | 每個 task 一次，再加整支 branch 一次 |
+
+- 被 gate 擋下時只能補齊或停下來問人；不得繞過、降級 Tier 或修改 gate 相關檔案。
+- T3 的 spec 和 plan 寫在 `docs/changes/`。
+- T2/T3 收尾時在最後列出「待人工確認」。
+
 4. 平行：互相獨立的唯讀任務可平行派發。會寫檔的實作代理一次只跑一個。
 5. 兩條規則衝突時，依本檔為準，並在回覆中說明採用了哪一條。
 
