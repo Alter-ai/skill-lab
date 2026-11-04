@@ -12,7 +12,8 @@ Generate software architecture documentation using C4 model diagrams in Mermaid 
 1. **Understand scope** - Determine which C4 level(s) are needed based on audience
 2. **Analyze codebase** - Explore the system to identify components, containers, and relationships
 3. **Generate diagrams** - Create Mermaid C4 diagrams at appropriate abstraction levels
-4. **Document** - Write diagrams to markdown files with explanatory context
+4. **Document** - Write all diagrams, their descriptions and the AI YAML into one `ARCHITECTURE.md` (see [Output Format](#output-format))
+5. **Cross-check** - Every Mermaid alias has a YAML element with the same `id`, and every `Rel` has a YAML relation, and vice versa
 
 ## C4 Diagram Levels
 
@@ -206,7 +207,7 @@ Use `$offsetX` and `$offsetY` to fix overlapping relationship labels.
 ### Clarity Guidelines
 
 1. **Start at Level 1** - Context diagrams help frame the system scope
-2. **One diagram per file** - Keep diagrams focused on a single abstraction level
+2. **One level per section** - Each diagram stays on a single abstraction level, in its own section of `ARCHITECTURE.md`
 3. **Meaningful aliases** - Use descriptive aliases (e.g., `orderService` not `s1`)
 4. **Concise descriptions** - Keep descriptions under 50 characters when possible
 5. **Always include a title** - "System Context diagram for [System Name]"
@@ -269,21 +270,70 @@ C4Container
   Rel(orderService, stockTopic, "Subscribes to")
 ```
 
-## Output Location
+## Output Format
 
-Write architecture documentation to `docs/architecture/` with naming convention:
-- `c4-context.md` - System context diagram
-- `c4-containers.md` - Container diagram
-- `c4-components-{feature}.md` - Component diagrams per feature
-- `c4-deployment.md` - Deployment diagram
-- `c4-dynamic-{flow}.md` - Dynamic diagrams for specific flows
+Write **one file**, `docs/architecture/ARCHITECTURE.md`, readable by humans and by other people's AI agents:
+
+- **Humans** read the rendered Mermaid diagrams and the descriptions.
+- **AI** reads the Mermaid source and the YAML at the end. The YAML is the source of truth: if a diagram and the YAML disagree, the YAML wins.
+
+Template (include only the levels the audience needs; Context and Container are required):
+
+````markdown
+# <System> Architecture
+
+## How to read this
+Humans: diagrams and descriptions below. AI agents: the YAML in "AI structured data" lists every element and relation and is authoritative; `id` equals the Mermaid alias.
+
+## 1. System Context
+```mermaid
+C4Context
+  title System Context - <System>
+  ...
+```
+**Scope:** what this diagram covers and what it deliberately leaves out.
+**Key decisions:** short bullets, link ADRs (`docs/decisions/001-....md`).
+
+## 2. Container
+```mermaid
+C4Container
+  ...
+```
+**Scope:** ...
+**Key decisions:** ...
+
+## 3. Component - <feature>   (optional; also Deployment / Dynamic sections as needed)
+
+## AI structured data
+```yaml
+elements:
+  - id: api                # same as Mermaid alias, unique across all levels
+    level: container       # context | container | component | deployment
+    type: container        # person | system | system_ext | container | container_db | container_queue | component | node
+    name: API
+    tech: Node.js
+    description: REST API for orders
+    code: src/server/      # repo path; omit for external systems and people
+    parent: shop           # optional: enclosing system/container/node id
+relations:
+  - from: web
+    to: api
+    label: Creates orders
+    protocol: HTTPS/JSON
+```
+````
+
+Rules:
+- One element appears **once** in the YAML even if it shows up in several diagrams; reuse the same alias in every diagram.
+- Every `Rel` in any diagram has a matching YAML relation (same `from`, `to`, `label`); nothing in the YAML is missing from the diagrams.
+- Point the repo's `CLAUDE.md` / `AGENTS.md` at the file: "Architecture: read `docs/architecture/ARCHITECTURE.md`."
 
 ## Exporting Images (for Word or slides)
 
-Render a diagram file to PNG next to it:
+Render every diagram in the file to PNG next to it (`ARCHITECTURE-1.png`, `ARCHITECTURE-2.png`, ... in file order; a file with one diagram gives `ARCHITECTURE.png`):
 
 ```bash
-bash scripts/render.sh <repo>/docs/architecture/c4-context.md
+bash scripts/render.sh <repo>/docs/architecture/ARCHITECTURE.md
 ```
 
 The script uses the Mermaid CLI pinned at `~/.local/mermaid-cli` (11.17.0, with its own Chromium). Then open the PNG and look at it: Mermaid's C4 auto-layout often overlaps relationship labels. Fix with short labels and `UpdateRelStyle(from, to, $offsetX=..., $offsetY=...)` per relationship, re-render, and look again. On 11.17.0, `UpdateLayoutConfig($c4ShapeInRow=...)` did not change the column count.
