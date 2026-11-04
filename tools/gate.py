@@ -38,7 +38,8 @@ def is_high(path: str, name: str, cfg: dict) -> bool:
     return (name in HIGH_NAMES or name.endswith(".lock")
             or (name.startswith("requirements") and name.endswith(".txt"))
             or path.startswith((".github/workflows/", ".claude/"))
-            or any(fnmatch.fnmatch(path, g) for g in cfg["sensitive"]))
+            or any(fnmatch.fnmatch(path, g) or (g.startswith("**/") and fnmatch.fnmatch(path, g[3:]))
+                   for g in cfg["sensitive"]))
 
 
 def is_test(parts: tuple, name: str) -> bool:

@@ -17,6 +17,8 @@ for p in [".github/workflows/ci.yml", "package.json", "pyproject.toml", "require
     assert gate.classify(p, cfg) == "high", p
 for p in ["tests/a.py", "src/__tests__/b.ts", "test_x.py", "x_test.go", "a.test.ts", "a.spec.ts", "spec/a.rb"]:
     assert gate.classify(p, cfg) == "test", p
+assert gate.classify("auth/x.py", cfg) == "high"
+assert gate.classify("payments/a.py", {**cfg, "sensitive": ["**/payments/**"]}) == "high"
 assert gate.classify("rea/bridge/pwndbg/inspect.py", cfg) == "source"
 assert gate.classify("src/中文 檔.py", cfg) == "source"
 
