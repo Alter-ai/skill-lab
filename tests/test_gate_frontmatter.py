@@ -39,4 +39,9 @@ for nl in ("\n", "\r\n"):
 assert gate.parse_front_matter("# hi\n") == ({}, "# hi\n")
 fm, _ = gate.parse_front_matter("---\na: 'x # y' # c\nb: v#w\nc:\n---\nbody")
 assert fm == {"a": "x # y", "b": "v#w", "c": []}, fm
+SKILL = (Path(__file__).resolve().parents[1] / "skills/change-record/SKILL.md").read_text(encoding="utf-8")
+tpl = SKILL.split("```markdown\n---\n", 1)[1].split("\n---\n", 1)[0]
+fm, _ = gate.parse_front_matter("---\n" + tpl + "\n---\n")
+assert fm["evidence"] == ["src/auth.py:42"], fm
+assert len(fm["verified_by"]) == 2, fm
 print("ok")

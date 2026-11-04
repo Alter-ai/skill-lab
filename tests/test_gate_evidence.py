@@ -30,6 +30,8 @@ gate.handle_evidence(bash(repo, "pytest -q 2>&1"), 103.5)  # redirect stays one 
 assert len(gate.read_log(repo)) == 4
 for c in ("pytest -q | tail -3", "pytest; true", "pytest && echo ok"):
     gate.handle_evidence(bash(repo, c), 103.6)
+for c in ("pytest &", "pytest -q 2>&1 &"):
+    gate.handle_evidence(bash(repo, c), 103.6)
 bg = bash(repo, "pytest")
 bg["tool_input"]["run_in_background"] = True
 gate.handle_evidence(bg, 103.7)

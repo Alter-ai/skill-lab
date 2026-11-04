@@ -98,6 +98,16 @@ assert "other.py" not in hk and hk["src/c.py"] == [(1, 2)], hk
 repo = build()
 gate.append_log(repo, {"t": time.time() + 1, "kind": "test", "ok": True, "cmd": "python -I tests x", "tree": "0" * 40})
 assert errs(repo) == [], errs(repo)
+# many stale records: fast, and one old matching record still passes
+repo = build(log_test=False)
+good = {"t": time.time(), "kind": "test", "ok": True, "cmd": "python -I tests x", "tree": gate.tree_snapshot(repo)}
+gate.append_log(repo, good)
+stale = dict(good, tree=gate.git(repo, "rev-parse", "HEAD^{tree}").strip())
+for i in range(200):
+    gate.append_log(repo, dict(stale, t=time.time() + i))
+t0 = time.time()
+assert errs(repo) == [], errs(repo)
+assert time.time() - t0 < 3, time.time() - t0
 # evidence entry without :line -> normal error, no traceback
 e = errs(build(evidence="[src/a.py]"))
 assert has(e, "evidence"), e

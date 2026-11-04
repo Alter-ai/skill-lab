@@ -26,12 +26,12 @@ BLOCK = [
     "env --unset=CLAUDE_CODE_CHILD_SESSION git commit -m x", "env -u CLAUDE_CODE_CHILD_SESSION git commit -m x",
     "unset -v CLAUDE_CODE_CHILD_SESSION", "Set-Item Env:CLAUDE_CODE_CHILD_SESSION ''",
     "export GIT_CONFIG_KEY_0=core.hooksPath", "(git rebase main)", "{ git rebase main; }",
-    "git commit -m x -n", "git rebase --continue", "git rebase --skip", "git cherry-pick --continue",
+    "git commit -m x -n", "git commit -S -n -m x", "git commit -u -n -m x", "git commit -m x -S -n", "git rebase --continue", "git rebase --skip", "git cherry-pick --continue",
 ]
 ALLOW = [
     "git log --grep commit", "git show HEAD", 'git commit -m "fix -n flag parsing"', "ls -n",
     "git merge -n feature", "echo $CLAUDE_CODE_CHILD_SESSION", "git commit -m 'it'\"'\"'s' -m note",
-    "git commit -mnote", "git -C /r status", "grep hooksPath x", 'echo "CLAUDE_CODE_CHILD_SESSION=1"',
+    "git commit -mnote", 'git commit -m "- x"', 'git commit -m x -m "- y"', "git -C /r status", "grep hooksPath x", 'echo "CLAUDE_CODE_CHILD_SESSION=1"',
     "echo git rebase main", "git commit -m 'unset CLAUDE_CODE_CHILD_SESSION core.hooksPath'",
     "git commit -m \"$(cat <<'EOF'\nfix: core.hooksPath and unset CLAUDE_CODE_CHILD_SESSION\n"
     "git rebase main is now blocked\nEOF\n)\"",

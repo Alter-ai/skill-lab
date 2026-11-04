@@ -60,7 +60,7 @@ architecture  = "docs/architecture/ARCHITECTURE.md"                             
    - Every component exists in ARCHITECTURE.md's YAML.
    - If `## 行為改變` is non-empty, ARCHITECTURE.md must have changed within the change. If there is no behavior change, leave `## 行為改變` empty (the empty heading stays visible to the human reviewer).
    - Every `evidence` `path:line` points into this change's diff and is not a doc file.
-   - `verified_by` has at least one entry matching `test_commands`, and the last successful recorded test run tested exactly the code being committed. Re-run the tests after the final code edit, from the repo's own directory as the session working directory.
+   - `verified_by` has at least one entry matching `test_commands`, and a successful recorded test run tested exactly the code being committed. Re-run the tests after the final code edit, from the repo's own directory as the session working directory.
    - `reviewed_by` is non-empty and a subagent was dispatched whose prompt contains the change file's path, and the dispatch happened at or after the commit that first added the change file.
    - T3 also needs a non-empty `## 決策` section.
 6. Merge commits: only the `Tier:` trailer is checked, and it is required (`git merge -m "...\n\nTier: Tn"`; a bare merge commit is blocked).

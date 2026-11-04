@@ -19,9 +19,10 @@ DOC_EXTS = {".md", ".rst", ".txt"}
 CONFIG_EXTS = {".yaml", ".yml", ".json", ".toml", ".ini", ".cfg"}
 
 
-def git(repo: Path, *args: str, env: dict | None = None, check: bool = True) -> str:
+def git(repo: Path, *args: str, env: dict | None = None, check: bool = True,
+        input: str | None = None) -> str:
     r = subprocess.run(["git", "-c", "core.quotePath=false", *args], cwd=repo, env=env,
-                       capture_output=True, check=check)
+                       capture_output=True, check=check, input=input.encode("utf-8") if input is not None else None)
     return r.stdout.decode("utf-8", errors="replace")
 
 
@@ -75,7 +76,7 @@ def _scalar(v: str) -> str:
         end = v.find(v[0], 1)
         if end > 0:
             return v[1:end]
-    return re.split(r"\s+#", v, maxsplit=1)[0].strip()
+    return "" if v.startswith("#") else re.split(r"\s+#", v, maxsplit=1)[0].strip()
 
 
 def parse_front_matter(text: str) -> tuple[dict, str]:
@@ -246,13 +247,20 @@ def verify_done(repo: Path, change_path: str, fm: dict, body: str, cfg: dict, ti
         if not ok:
             errors.append("verified_by: no successful test run recorded")
         else:
-            for r in reversed(ok):  # the log is shared across worktrees: any run of exactly this content counts
-                stale = [p for p in names if classify(p, cfg) != "doc" and _blob(repo, ":" + p) != _blob(repo, f"{r['tree']}:{p}")]
+            # the log is shared across worktrees: any run of exactly this content counts
+            paths = [p for p in names if classify(p, cfg) != "doc"]
+            cur = {p: _blob(repo, ":" + p) for p in paths}
+            trees = list(dict.fromkeys(r["tree"] for r in reversed(ok)))  # newest first, unique
+            pairs = [f"{t}:{p}" for t in trees for p in paths]
+            out = git(repo, "cat-file", "--batch-check", input="\n".join(pairs) + "\n", check=False).splitlines() if pairs else []
+            old = {s: (l.split()[0] if l.split()[-1:] != ["missing"] else "") for s, l in zip(pairs, out)}
+            for t in trees:
+                stale = [p for p in paths if cur[p] != old.get(f"{t}:{p}")]
                 if not stale:
                     break
                 first = first or stale
             else:
-                errors += [f"verified_by: {p} changed after the last successful test run" for p in first]
+                errors += [f"verified_by: {p} changed after the successful test run that tested exactly this content" for p in first]
     if not _list(fm.get("reviewed_by")):
         errors.append("reviewed_by must be non-empty")
     elif not any(r.get("kind") == "agent" and change_path in r.get("prompt_paths", [])
@@ -367,7 +375,7 @@ def handle_evidence(payload: dict, now: float) -> None:
             cmd = " ".join(str(ti.get("command", "")).split())
             # a pipe, `;`, `&&` or a background run hides or defers the real exit status
             if (_is_test_cmd(cmd, cfg["test_commands"]) and len(_invocations(cmd)) == 1
-                    and not ti.get("run_in_background")):
+                    and not ti.get("run_in_background") and not re.search(r"(?<!&)&$", cmd)):
                 append_log(repo, {"t": now, "kind": "test", "ok": event == "PostToolUse", "cmd": cmd,
                                   "tree": tree_snapshot(repo)})
         elif tool == "Agent" and event == "PostToolUse":
@@ -486,7 +494,7 @@ def _check_inv(inv: list[str]) -> str | None:
                     if ch == "n":
                         return "git commit -n bypasses hooks"
                     if ch in ARG_FLAGS:
-                        skip = k == len(a)
+                        skip = k == len(a) and ch in "mFCct"  # -S/-u take only an attached value
                         break
     return None
 

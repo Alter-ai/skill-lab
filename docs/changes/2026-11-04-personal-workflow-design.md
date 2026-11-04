@@ -131,7 +131,7 @@ supersedes: []
    - `components` 不能為空，每個 id 都要在 `ARCHITECTURE.md` 的 YAML 中找得到。
    - 「行為改變」段不是空的時，本變更範圍內必須動過 `ARCHITECTURE.md`。這是防碎片化和避免無意義修改之間的折衷：沒有行為改變時，把 `## 行為改變` 留空（空標題仍留在檔案裡，人一看就知道）。
    - `evidence` 的每個 `path:line` 都要落在本變更 `-U0` diff 的 hunk 範圍內。
-   - `verified_by` 至少一條要符合 `test_commands`，而且證據日誌裡最後一次**成功**的測試紀錄要和現在一致：本變更動到的每個路徑，在該次紀錄的 tree 中的 blob 都等於現在 index 的 blob。也就是說，**測試跑的正是要 commit 的內容**。
+   - `verified_by` 至少一條要符合 `test_commands`，而且證據日誌裡存在一次**成功**的測試紀錄，測的正是這份內容：本變更動到的每個路徑，在該次紀錄的 tree 中的 blob 都等於現在 index 的 blob。也就是說，**測試跑的正是要 commit 的內容**。
    - `reviewed_by` 不能為空，而且證據日誌裡在本變更開始之後，要有一筆 Agent 派發紀錄，其 prompt 提到這份 change 檔的路徑。
    - T3 另外要求「決策」段不能是空的。
 6. 擋下時以非 0 結束，在 stderr 寫明缺什麼，並指向 change-record skill。
