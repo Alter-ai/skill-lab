@@ -1,0 +1,4 @@
+# Tier gate config (see skill change-record). Presence of this file turns the gate on for this repo.
+test_commands = ["python -I tests/", "C:/Python313/python.exe -I tests/"]
+sensitive = []
+architecture = "docs/architecture/ARCHITECTURE.md"
