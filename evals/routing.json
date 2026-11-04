@@ -1,5 +1,5 @@
 {
-  "_note": "Baseline measured with ~/.claude/CLAUDE.md installed (2026-11-03); no pre-rule baseline exists. Run each prompt in a fresh desktop-app session and record the skills that load in observed_baseline; set expected from the rules in CLAUDE.md.draft. Re-run after every change and diff. Run 2026-11-03: c1-a/c1-c in an empty folder, others in seeded fixtures; one sample per case; wrapper text (background + notes folder) precedes each prompt. Tier cases (area \"tier\"): 每題 5 runs; record tier chosen and whether brainstorming loaded.",
+  "_note": "Baseline measured with ~/.claude/CLAUDE.md installed (2026-11-03); no pre-rule baseline exists. Run each prompt in a fresh desktop-app session and record the skills that load in observed_baseline; set expected from the rules in CLAUDE.md.draft. Re-run after every change and diff. Run 2026-11-03: c1-a/c1-c in an empty folder, others in seeded fixtures; one sample per case; wrapper text (background + notes folder) precedes each prompt. Tier cases (area \"tier\"): 每題 5 runs; record tier chosen and whether brainstorming loaded. Tier baseline run 2026-11-04 (20 cases x 5 = 100 runs): tier on first line correct 100/100; T0/T1 brainstorming false trigger 0/50; T2/T3 brainstorming loaded 50/50. Method deviation: desktop sessions could not be started from a side session, so runs used headless `claude -p` (CLI 2.1.316, claude-opus-5-5) with superpowers 6.4.2 loaded via --plugin-dir (the CLI does not install it otherwise; without it brainstorming cannot fire). The CLI lacks the desktop-app system prompt. Bare prompt, no wrapper text; fresh copy of a seeded fixture repo per run (t-t3-1: empty folder); default permissions, so writes/Bash were denied mid-run; --max-turns 15. Only 'brainstorming loaded' is recorded, not whether the bounded vs full path was followed.",
   "cases": [
     {
       "id": "c1-a",
@@ -126,160 +126,160 @@
       "area": "tier",
       "prompt": "把 README.md 裡的錯字「recieve」改成「receive」",
       "expected": "first line states T0; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T0,T0,T0,T0,T0; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t0-2",
       "area": "tier",
       "prompt": "把 docs/setup.md 的安裝指令加上 --upgrade 說明",
       "expected": "first line states T0; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T0,T0,T0,T0,T0; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t0-3",
       "area": "tier",
       "prompt": "把 config/settings.yaml 的 log_level 從 info 改成 warning",
       "expected": "first line states T0; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T0,T0,T0,T0,T0; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t0-4",
       "area": "tier",
       "prompt": "把 helpers.py 重新命名成 string_utils.py，只改檔名，內容與其他檔案都不動",
       "expected": "first line states T0; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T0,T0,T0,T0,T0; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t0-5",
       "area": "tier",
       "prompt": "在 CHANGELOG.md 補一行今天的修訂紀錄",
       "expected": "first line states T0; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T0,T0,T0,T0,T0; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t1-1",
       "area": "tier",
       "prompt": "utils.py 的 parse_date 遇到空字串會丟 ValueError，修掉它，要有測試",
       "expected": "first line states T1; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T1,T1,T1,T1,T1; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t1-2",
       "area": "tier",
       "prompt": "cart.py 的 total() 在購物車為空時會丟 IndexError，修掉它，要有測試",
       "expected": "first line states T1; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T1,T1,T1,T1,T1; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t1-3",
       "area": "tier",
       "prompt": "server.py 的 parse_port() 遇到前後有空白的字串會失敗，修掉它，要有測試",
       "expected": "first line states T1; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T1,T1,T1,T1,T1; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t1-4",
       "area": "tier",
       "prompt": "format_name() 把中間名吃掉了，修這個 bug",
       "expected": "first line states T1; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T1,T1,T1,T1,T1; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t1-5",
       "area": "tier",
       "prompt": "把 report.py 的 export_row 裡重複的判斷式抽成同檔案內的小函式",
       "expected": "first line states T1; no brainstorming",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T1,T1,T1,T1,T1; brainstorming N,N,N,N,N",
+      "verdict": "match"
     },
     {
       "id": "t-t2-1",
       "area": "tier",
       "prompt": "幫 API 加上分頁功能，涵蓋 orders、users 兩個端點",
       "expected": "first line states T2; brainstorming bounded path",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T2,T2,T2,T2,T2; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t2-2",
       "area": "tier",
       "prompt": "在登入流程加上失敗五次鎖定帳號",
       "expected": "first line states T2; brainstorming bounded path",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T2,T2,T2,T2,T2; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t2-3",
       "area": "tier",
       "prompt": "改 .github/workflows/ci.yml 加一個 lint job",
       "expected": "first line states T2; brainstorming bounded path",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T2,T2,T2,T2,T2; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t2-4",
       "area": "tier",
       "prompt": "幫 payments/ 底下的退款邏輯加上部分退款",
       "expected": "first line states T2; brainstorming bounded path",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T2,T2,T2,T2,T2; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t2-5",
       "area": "tier",
       "prompt": "新增匯出 CSV 的功能，要改 service、controller 和前端按鈕",
       "expected": "first line states T2; brainstorming bounded path",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T2,T2,T2,T2,T2; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t3-1",
       "area": "tier",
       "prompt": "幫我從零做一個記帳 App",
       "expected": "first line states T3; brainstorming full flow",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T3,T3,T3,T3,T3; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t3-2",
       "area": "tier",
       "prompt": "把單體後端拆成 auth 和 billing 兩個服務",
       "expected": "first line states T3; brainstorming full flow",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T3,T3,T3,T3,T3; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t3-3",
       "area": "tier",
       "prompt": "重新設計對外 REST API，v2 要和 v1 不相容",
       "expected": "first line states T3; brainstorming full flow",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T3,T3,T3,T3,T3; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t3-4",
       "area": "tier",
       "prompt": "新增外掛系統，讓第三方可以擴充匯出格式",
       "expected": "first line states T3; brainstorming full flow",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T3,T3,T3,T3,T3; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     },
     {
       "id": "t-t3-5",
       "area": "tier",
       "prompt": "把資料層從 SQLite 換成 PostgreSQL，並重組 repository 結構",
       "expected": "first line states T3; brainstorming full flow",
-      "observed_baseline": "",
-      "verdict": ""
+      "observed_baseline": "5 runs (headless CLI, 2026-11-04): first-line tier T3,T3,T3,T3,T3; brainstorming Y,Y,Y,Y,Y",
+      "verdict": "match"
     }
   ]
 }
