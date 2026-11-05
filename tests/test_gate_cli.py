@@ -34,6 +34,7 @@ text = raw.decode()
 assert b"\r" not in raw and text.startswith("#!/bin/sh\n# installed by gate.py\n")
 assert GATE in text and sys.executable.replace("\\", "/") in text and 'commit-msg "$1"' in text
 assert '[ "$CLAUDE_CODE_CHILD_SESSION" = 1 ] || exit 0\n' in text
+assert '[ -x "$hooks/commit-msg.local" ]' in text
 assert text.index("commit-msg.local") < text.index("CLAUDE_CODE_CHILD_SESSION") < text.index("exec ")
 if os.name == "posix":
     assert os.access(hook(repo), os.X_OK)
@@ -46,6 +47,7 @@ assert hook(repo).read_text() == text and not (hook(repo).parent / "commit-msg.l
 for code, ok in ((1, False), (0, True)):
     r = make_repo({"src/a.py": "x = 1\n"})
     hook(r).write_bytes(f"#!/bin/sh\nexit {code}\n".encode())
+    hook(r).chmod(0o755)
     gate.install(r, GATE)
     assert (hook(r).parent / "commit-msg.local").read_bytes() == f"#!/bin/sh\nexit {code}\n".encode()
     gate.install(r, GATE)  # must not clobber .local
@@ -54,6 +56,16 @@ for code, ok in ((1, False), (0, True)):
     run(r, "add", "-A")
     p = commit(r, "plain", child=False)
     assert (p.returncode == 0) == ok, p.stderr
+
+# a non-executable local hook is ignored by git, so it must not block (POSIX only: Windows has no x bit)
+if os.name == "posix":
+    r = make_repo({"src/a.py": "x = 1\n"})
+    hook(r).write_bytes(b"#!/bin/sh\nexit 1\n")
+    hook(r).chmod(0o644)
+    gate.install(r, GATE)
+    write(r, {"src/a.py": "x = 2\n"})
+    run(r, "add", "-A")
+    assert commit(r, "plain", child=False).returncode == 0
 
 # local core.hooksPath refused
 r = make_repo({"a.txt": "a\n"})

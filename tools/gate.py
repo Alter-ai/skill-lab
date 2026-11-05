@@ -572,7 +572,7 @@ def install(repo: Path, gate_path: str) -> str:
     gp = gate_path.replace("\\", "/")
     hook.write_bytes(("#!/bin/sh\n" + MARKER + "\n"
                       'hooks="$(dirname "$0")"\n'
-                      'if [ -f "$hooks/commit-msg.local" ]; then "$hooks/commit-msg.local" "$@" || exit $?; fi\n'
+                      'if [ -x "$hooks/commit-msg.local" ]; then "$hooks/commit-msg.local" "$@" || exit $?; fi\n'
                       '[ "$CLAUDE_CODE_CHILD_SESSION" = 1 ] || exit 0\n'
                       f'exec "{py}" -I "{gp}" commit-msg "$1"\n').encode("utf-8"))
     hook.chmod(0o755)

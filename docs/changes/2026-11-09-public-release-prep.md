@@ -1,7 +1,7 @@
 ---
 tier: T2
 status: partial
-components: [skilllab, audit]
+components: [skilllab, audit, gate, skills]
 evidence:
   - tools/skill_audit.py:21
   - tests/test_skill_audit.py:50
@@ -26,6 +26,22 @@ skill-lab 要公開。工作樹要先乾淨（工具裡沒有本機路徑）、�
 - action SHA 用未登入的 REST API 查（`gh` 未登入）：checkout v4、setup-python v5。
 - MIT、docs 公開、`examples/CLAUDE.md` 採預設值。個人字串留在舊 commit 和 docs 內，由 Task 6 處理。
 - `tests/test_palette_check.py` 用 redirect 吃掉預期的錯誤輸出，通過時只印 `ok`。
+- 更正：`2026-11-09-oss-release-readiness.md` 與 `2026-11-09-web-visual-design.md` 的「沒做／已知限制」寫著 partial、路由案例尚未跑；實際上兩者都已 done、路由也跑過（結果見上）。done 紀錄不改，以本段為準。
+- Ruling: T3 eval arms are dispatched by the controller, not the implementer — implementers may not spawn subagents — no cost beyond controller context.
+- Ruling: each T2 task commits status: partial; after the task review passes, a final commit sets status: done with reviewed_by — the gate requires a reviewer dispatch containing the change path after the file first appears — if wrong, the gate blocks and tells us.
+- Ruling: branch in place, no worktree — plan's Global Constraints name the repo checkout on this branch, and the gate hook lives in that checkout — cost if wrong: dirty-tree risk only.
+- Ruling: Task 1 run by the controller, no review — no repo change — none.
+- Ruling: gh auth deferred to the owner before Task 6; T5 looks up action SHAs via the unauthenticated GitHub REST API — needs no credentials — rate limit only.
+- Ruling: gate-evidence test runs and the status: done commit happen in the controller session from the repo cwd — subagent test runs are not recorded in the gate's evidence log, which is the documented requirement rather than a bypass — cost: slightly more controller context.
+- Ruling: T3 split: part A (steps 1-5, script and eval file) sonnet; controller runs baseline (step 6); part B (steps 7-9, knowledge) on opus; controller runs with-skill arm and blind review (step 10) — implementers may not dispatch subagents, knowledge writing needs most judgment — cost: two implementers.
+- Ruling: palette_check rejects empty or missing pairs, beyond plan's listed tests — otherwise the rubric color item passes vacuously — cost: none.
+- Ruling: run one quality round despite the formal pass — reviewer found template convergence, overlength, and technical errors that undercut the owner's condition of real design knowledge — cost: one fix dispatch and one re-measure.
+- Ruling: stop after a small guidance edit, no third measured round — the pass condition is met twice, the owner chooses among three directions in S2 which reduces the harm, and usage is limited — cost: the edit is unmeasured and convergence stays a stated limitation.
+- Ruling: Task 6 must also pass --replace-message to git filter-repo — replace-text does not rewrite commit messages, a plan omission found by review — cost: none.
+- Ruling: Task 5 routing regression reduced to the two new cases x3 plus one non-tier case per area x1, on headless sonnet with a turn cap, not all 35 — the owner hit the usage limit once today and a full run is costly — cost: a routing regression could go unseen; stated in the results and final message.
+- Ruling: Task 5's change stays status: partial until the final review, so final fixes land in it rather than editing a done record — done changes are history under change-record — cost: none.
+- Ruling: change one condition in tools/gate.py and its tests — the owner's rule forbids editing gate files when blocked in order to bypass; this is a bug fix found in review, not a response to a block, and does not weaken the gate — cost: if the owner disagrees, revert one commit and keep CI Windows-only.
+- Ruling: Task 6 plan updated with pyc removal, identifier rules, per-spelling verification and master checkout, and dry-run in a temp clone before handing over — publication is irreversible — cost: none.
 
 ## 沒做／已知限制
 - 進行中（partial）：尚未審查。
