@@ -12,7 +12,7 @@ Three things, in practice `[expert opinion: NNG-HIER]`:
 
 ## Count it
 
-These are rules of thumb from one practitioner source, stated as guidelines to adapt, not laws. `[expert opinion: NNG-HIER]`
+Rules of thumb from one practitioner source, stated as guidelines to adapt, not laws. `[expert opinion: NNG-HIER]`
 
 | Item | Rule of thumb |
 |---|---|
@@ -21,43 +21,49 @@ These are rules of thumb from one practitioner source, stated as guidelines to a
 | Contrast treatments | No more than 3 in a complex design |
 | Colours | About 2 primary, 2 secondary |
 
-Contradiction: many real type scales have five or six steps, and a display treatment often goes well past 32px. This skill's rule is to **state the count and defend anything past 3**: 3 working sizes, plus at most one for the memorable element, plus at most one for metadata. `[working default]` A ratio-based scale produces sizes; it does not justify using them all. In the no-skill baseline, specs listed five to seven sizes, and none stated a limit on the count. `[measured: BASELINE, n=3]`
+Contradiction: many real type scales have five or six steps, and a display treatment often goes well past 32px. This skill's rule is to **state the count and defend anything past 3**. `[working default]` A ratio-based scale produces sizes; it does not justify using them all. `[derived]` In the no-skill baseline, specs listed five to seven sizes, and none stated a limit on the count. `[measured: BASELINE, n=3]`
 
-Write it like this, with your numbers:
+**Choose scale and spacing from the content.** Say how many steps, what each is for, and why this content wants that. `[working default]` These differ on purpose:
 
-> 3 sizes + 1 display. 28 heading, 18 sub, 16 body; 56 only for the page title. 2 weights. Nothing else appears.
+- Dense tables read at a glance: small size range, tight rows, and group separation doing the work.
+- Long reading: spacing tied to the body line height, so vertical rhythm comes from the text.
+- Phone lists with tap targets: row height set by the target, then spacing fitted around it.
 
-**Spacing is a rule, not a list.** Name the base step, the number of steps in use, and how they map to grouping. Inside a group must be clearly tighter than between groups: tighten heading to content, and give important elements more room `[expert opinion: NNG-HIER]`. Use about a 2:1 or stronger jump between levels. `[working default]`
+Inside a group must be clearly tighter than between groups. Tighten heading to content, and give important elements more room `[expert opinion: NNG-HIER]`. How large the jump is depends on density. `[working default]`
 
-> Base 8. 4 steps: 8 inside a row, 16 inside a group, 32 between groups, 64 between sections. Each level at least doubles.
+Do not default to doubling from 8. Every run of an earlier version of this skill copied the same 8/16/32/64 from its example, on unrelated briefs. `[measured: EVAL-R1, n=3]`
 
 ## Reading column
 
-- Narrow column, loose leading: Latin benchmark columns are 644 and 607px wide, and line-heights are about 1.65 and 1.75 `[measured: D7, n=2 each, not a law]`. Chinese numbers are in `references/typography-zh-en.md`.
-- State widths in `em` for Chinese and `ch` for Latin.
-- For code and tables, say how they break out of the column; a table in a text column is the usual failure.
+- Latin benchmark columns are 644 and 607px wide, with line-heights of about 1.65 and 1.75. `[measured: D7, n=2 each, not a law]` Chinese figures are in `references/typography-zh-en.md`.
+- State widths in `em` for Chinese and `ch` for Latin. `[derived from MDN-LEN]`
+
+## Objects on the page
+
+List the objects this brief actually has and give each a type, colour and spacing rule. Without this, a spec describes a page's look but not how to build its contents; no-skill runs had these rules more often than runs of an earlier version of this skill `[measured: EVAL-R1, n=3]`. Skip what the brief does not have. Prompts for common ones, all `[working default]` unless tagged:
+
+- **Tables.** Which size, how figures align, how rows separate, what happens below the column width. Tabular figures need `tnum` kept when subsetting `[measured: BROWSER]`.
+- **Code blocks.** Size, background, colour count, overflow. **A width claim must fit the stated column:** N `ch` at the code size plus padding must not exceed the column. Monospace faces are often near 0.6em per character, so 100ch at 14px needs about 840px; measure your font `[derived from MDN-LEN]`.
+- **Syntax colours.** Do not use the signals links use, such as underline or the link colour, for non-links `[derived]`. Check them in a second tokens file.
+- **Schedules and timelines.** Time column width, long title wrapping, how the current or next item is marked without colour alone `[normative: WCAG-141]`.
+- **Portraits and images.** Crop ratio, size, the fallback when one is missing, treatment in dark mode.
+- **Badges and tags.** One meaning each, when one does not appear, and text or an icon beside the colour `[normative: WCAG-141]`.
+- **Buttons.** How many fill styles, label pair as `body` `[normative: WCAG-1411]`, target size for the stated device.
 
 ## Squint test
 
 Blur the page and see which shapes and groups remain, without reading. NN/g applies blur radii of 5, 10 and 20px: the first two show the intended structure, and at 20px one strongly coloured item emerged as an unintended focal point. `[expert opinion: NNG-HIER]`
 
-**With a rendered page:** in the browser console run `document.documentElement.style.filter = "blur(10px)"`, repeat at 5 and 20, and write down what you see. Tools like `webapp-testing` can screenshot this.
+- **With a rendered page:** run `document.documentElement.style.filter = "blur(10px)"` in the console, repeat at 5 and 20, and write down what you see. `[derived from NNG-HIER]`
+- **With a spec only:** give your prediction, labelled `predicted, not rendered`. Do not claim a pass when nothing was rendered. `[working default]`
 
-**With a spec only, nothing rendered:** write the prediction and label it `predicted, not rendered`. Do not write "passes the squint test" when nothing was rendered.
-
-Required form:
-
-> Squint (predicted, not rendered): at 10px you see (1) the dark title block top left, (2) one accent bar, (3) two grey columns. The accent is the only saturated shape. At 20px, nothing else should compete; the risk is the sticky button, so it stays neutral until the hero scrolls away.
-
-If the first thing you see is not the first thing the page is for, change the value or size of that element, not its hue.
+Say what shows first, second and third for this page, and what might compete. Use your own words about your own shapes. If the first thing you see is not what the page is for, change that element's value or size, not its hue. `[derived from NNG-HIER]`
 
 ## One memorable element
 
-Spend boldness once. In the owner's benchmarks, three sites each rely on one element visible at a glance, with everything else restrained. `[measured: D7, n=3, a small hand-picked sample]` `frontend-design` gives the same direction. Here it has to be stated in a checkable form:
+Spend boldness once. In the owner's benchmarks, three sites each rely on one element visible at a glance, with everything else restrained. `[measured: D7, n=3, a small hand-picked sample]` `frontend-design` gives the same direction.
 
-> Memorable element: X. It appears in N places and takes Y (the accent, the display size). Held back so it can stand out: A, B, C.
-
-Check: take it away. If the page could be anyone's, you have the right element. If nothing changes, it was not doing the job. Tie it to the subject. A generic flourish, such as a gradient or a large statistic, does not count.
+Say what it is, where it appears, what it uses up (the accent, the display size) and what is held back for it. Check by removing it: if the page could then be anyone's, it was doing its job. Tie it to the subject. A generic flourish, such as a gradient or a large statistic, does not count. `[working default]`
 
 ## Benchmark observations
 
@@ -75,7 +81,7 @@ First screen, desktop only, 2026-11-05, hand-picked sample of 9, phones and scro
 | Scott Helme | Hero photo, image cards | Dark ground | Visually plain in this sample, a hypothesis only |
 | Simon Willison | Content density, not visuals | Dark purple bar, two dense columns | Wins by publishing frequency and content |
 
-Design rules drawn from them, all from this small sample:
+Design rules drawn from them, all from this small sample `[measured: D7]`:
 
 1. One memorable element for the whole site.
 2. Narrow column and loose leading; looser for Chinese, and test with real text.
@@ -84,6 +90,6 @@ Design rules drawn from them, all from this small sample:
 
 ## Attractive is not usable
 
-Attractive products are rated easier to use than they are, and people forgive small problems in them. Kurosu and Kashimura (1995, 252 participants) found appeal correlated more with perceived than with measured ease of use. `[expert opinion: NNG-AUE, summarising the study]` It masks small problems in testing, and it does not rescue large ones.
+Attractive products are rated easier to use than they are, and people forgive small problems in them. Kurosu and Kashimura (1995, 252 participants) found appeal correlated more with perceived than with measured ease of use. It masks small problems in testing, and it does not rescue large ones. `[expert opinion: NNG-AUE, summarising the study]`
 
-So passing this skill's checks shows that the listed conditions are met. It does not show that the design is good or that the page works. Run real tasks and watch what people do, not what they say about the look. A person still makes the final call on taste; say so rather than certifying quality.
+So passing this skill's checks shows that the listed conditions are met. It does not show that the design is good or that the page works. Run real tasks and watch what people do, not what they say about the look. A person still makes the final call on taste. `[derived]`

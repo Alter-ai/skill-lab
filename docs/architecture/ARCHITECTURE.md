@@ -68,6 +68,8 @@ elements:
     behavior:
       - Each skill directory has a SKILL.md with name and description frontmatter
       - Imported third-party skills carry LICENSE and a SOURCE.md recording upstream commit, copied date and local modifications
+      - web-visual-design holds graded colour, Chinese-Latin type and layout knowledge in references/; its procedure keeps the spec to the brief's length with working in an appendix
+      - web-visual-design/scripts/palette_check.py checks tokens.json for WCAG 2.2 contrast on declared pairs; exits 0 pass, 1 problems, 2 unreadable or bad usage; empty pairs and malformed input are problems, not crashes
     code: skills/
     parent: skilllab
   - id: audit
