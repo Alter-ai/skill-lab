@@ -21,7 +21,7 @@ def git(repo, *args, ok=(0,)):
 
 def sensitive(path):
     n = PurePosixPath(path).name.lower()
-    return n.endswith("zone.identifier") or n == ".env" or n.startswith(".env.") or n.endswith((".pem", ".key"))
+    return n.endswith("zone.identifier") or n == ".env" or (n.startswith(".env.") and not n.endswith((".example", ".sample", ".template"))) or n.endswith((".pem", ".key"))
 
 
 def notebook_cells(nb):
@@ -35,12 +35,14 @@ def scan(repo: Path, forbid: list[str]) -> list[str]:
     first = {}
     for i, t in enumerate(forbid):
         first.setdefault(t.lower(), i)
-    pat = re.compile("|".join(re.escape(t) for t in sorted(first, key=len, reverse=True)) or "(?!)", re.I)
+    keys = sorted(first, key=len, reverse=True)
+    pat = re.compile("|".join(f"({re.escape(t)})" for t in keys) or "(?!)", re.I)
 
     def red(path):  # a path may itself contain forbidden text; never echo it
-        return pat.sub(lambda m: f"<forbid[{first[m.group().lower()]}]>", path)
+        # the group index, not the matched text: re.I folds more than str.lower() (e.g. "ſ" matches "s")
+        return pat.sub(lambda m: f"<forbid[{first[keys[m.lastindex - 1]]}]>", path)
 
-    out = []
+    out = ["shallow-clone"] if git(repo, "rev-parse", "--is-shallow-repository").strip() == "true" else []
     head_files = {}  # path -> size at HEAD
     for rec in git(repo, "ls-tree", "-r", "-l", "-z", "HEAD").split("\0"):
         if rec:
@@ -48,6 +50,7 @@ def scan(repo: Path, forbid: list[str]) -> list[str]:
             size = meta.split()[-1]
             head_files[path] = int(size) if size.isdigit() else 0  # submodules show "-"
     hist_paths = sorted({p for p in git(repo, "log", "--all", "--name-only", "--format=").splitlines() if p})
+    refs = git(repo, "for-each-ref", "--format=%(refname)").splitlines()
     tags = []  # raw text of annotated tags
     for ref in git(repo, "for-each-ref", "--format=%(objecttype) %(refname)", "refs/tags").splitlines():
         kind, name = ref.split(" ", 1)
@@ -72,9 +75,12 @@ def scan(repo: Path, forbid: list[str]) -> list[str]:
             n = len(git(repo, "log", "--all", "-i", "-F", *args, "--format=%H", "--").split())
             if n:
                 out.append(f"forbid[{i}] {label} {n} commits")
-        n = sum(low in line.lower() for line in git(repo, "log", "--all", "--format=%ae %ce").splitlines())
+        n = sum(low in line.lower() for line in git(repo, "log", "--all", "--format=%an %ae %cn %ce").splitlines())
         if n:
             out.append(f"forbid[{i}] author-email {n} commits")
+        n = sum(low in r.lower() for r in refs)
+        if n:
+            out.append(f"forbid[{i}] ref {n} refs")
         n = sum(low in t for t in tags)
         if n:
             out.append(f"forbid[{i}] tag {n} tags")
@@ -109,6 +115,9 @@ def scan(repo: Path, forbid: list[str]) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
+    for stream in (sys.stdout, sys.stderr):  # legacy console codecs (cp950) cannot encode every file name
+        if hasattr(stream, "reconfigure"):  # absent when a caller swapped in a StringIO
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser()
     ap.add_argument("repo")
     ap.add_argument("--forbid", action="append", default=[])

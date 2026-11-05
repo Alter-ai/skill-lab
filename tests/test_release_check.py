@@ -166,6 +166,47 @@ assert "forbid[0] content bin.dat binary" in out and "forbid[0] history 1 commit
 out = rc.scan(repo({"abc.txt": "abc\n"}), ["ab", "abc"])
 assert "forbid[0] content <forbid[1]>.txt:1" in out and "forbid[1] content <forbid[1]>.txt:1" in out, out
 
+# author and committer names, ref names
+r = repo()
+run(r, "commit", "-q", "--allow-empty", "-m", "e", "--author=Jane Doe <a@example.com>")
+out = rc.scan(r, ["jane doe"])
+assert first(out, "forbid[0] author-email 1 commits") and not any("jane" in f.lower() for f in out), out
+r = repo()
+run(r, "-c", "user.name=Jane Doe", "commit", "-q", "--allow-empty", "-m", "e")
+assert first(rc.scan(r, ["Jane Doe"]), "forbid[0] author-email 1 commits")
+r = repo()
+run(r, "tag", "projx-v1")
+out = rc.scan(r, ["projx"])
+assert out == ["forbid[0] ref 1 refs"], out
+r = repo()
+run(r, "branch", "projx-work")
+assert rc.scan(r, ["projx"]) == ["forbid[0] ref 1 refs"]
+assert rc.scan(repo(), ["projx"]) == []
+
+# .env templates are not secrets
+out = rc.scan(repo({".env.example": "k", ".env.sample": "k", "a/.env.template": "k", ".env.prod": "k"}), [])
+assert out == ["sensitive-path .env.prod"], out
+
+# non-ASCII file name with a legacy console encoding: backslash-escaped, not a traceback
+import subprocess  # noqa: E402
+r = repo({"é.pem": "p"})
+p = subprocess.run([sys.executable, str(ROOT / "skills" / "oss-release-readiness" / "scripts" / "release_check.py"), str(r)],
+                   capture_output=True, env={**os.environ, "PYTHONIOENCODING": "cp950"})
+assert p.returncode == 1 and b"sensitive-path" in p.stdout and not p.stderr, (p.returncode, p.stdout, p.stderr)
+
+# shallow clone sees partial history
+r = repo()
+run(r, "commit", "-q", "--allow-empty", "-m", "two")
+import tempfile  # noqa: E402,F811
+with tempfile.TemporaryDirectory() as t:
+    run(r, "clone", "-q", "--depth=1", r.as_uri(), str(Path(t) / "c"))
+    assert "shallow-clone" in rc.scan(Path(t) / "c", [])
+assert "shallow-clone" not in rc.scan(r, [])
+
+# case folding in redaction must not raise
+out = rc.scan(repo({"ſecret.txt": "secret"}), ["secret"])
+assert "forbid[0] content <forbid[0]>.txt:1" in out, out
+
 # git failure is exit 2, not findings
 r = repo()
 tree = run(r, "rev-parse", "HEAD^{tree}").strip()
