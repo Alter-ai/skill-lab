@@ -23,5 +23,8 @@ Publishing exposes the whole history, not just the latest files. A string remove
 
 ## Limits
 
-- The check matches text, case-insensitively, in non-binary files. Binary content, images and encoded secrets are not searched.
+- The check matches text case-insensitively, in text and binary files at HEAD (binary matches are reported as `binary`), in diffs across history, commit messages, annotated tags and file names. Encoded or obfuscated secrets are not found.
+- Only emails are checked for authors and committers; names are not scanned.
+- A bare or mirror clone returns 2; scan a normal clone.
+- A directory nested inside another git repo scans that outer repo.
 - `attribution` only checks that `skills/*/` with a `LICENSE` has a `SOURCE.md` with a 40-character upstream SHA; whether the licence permits redistribution is a human call.

@@ -3,7 +3,8 @@ tier: T2
 status: partial
 components: [skills]
 evidence:
-  - skills/oss-release-readiness/scripts/release_check.py:26
+  - skills/oss-release-readiness/scripts/release_check.py:34
+  - skills/oss-release-readiness/scripts/release_check.py:111
 verified_by:
   - C:/Python313/python.exe -I tests/test_release_check.py
 reviewed_by: []
@@ -27,5 +28,7 @@ skill-lab 要公開，公開前要能檢查 HEAD 和全部歷史有沒有不能�
 
 ## 沒做／已知限制
 - 進行中（partial）：尚未審查；路由案例還沒跑（Task 5）。
-- 只搜尋非二進位檔；編碼過的秘密、圖片內容不會被找到。
-- 路徑含換行等特殊字元以外，檔名比對以 basename 為準。
+- HEAD 的二進位檔也會比對（回報 `binary`）；編碼或混淆過的秘密找不到。
+- 作者和提交者只檢查信箱，不檢查名字。
+- 檔名比對是整個路徑的子字串；敏感路徑則看 basename。
+- bare 或 mirror clone 回 2；巢狀在別的 repo 內的目錄會掃外層 repo。
