@@ -1,13 +1,13 @@
 ---
 tier: T2
-status: partial
+status: done
 components: [skills]
 evidence:
   - skills/webapp-testing/scripts/with_server.py:1
 verified_by:
   - C:/Python313/python.exe -I tests/test_skill_audit.py
   - "manual: C:/Python313/python.exe -I tools/skill_audit.py local=skills 結果 17 skills, 0 flagged, 無 30% 以上重疊"
-reviewed_by: []
+reviewed_by: [fresh-context subagent]
 supersedes: []
 ---
 ## 為什麼
@@ -24,6 +24,5 @@ supersedes: []
 
 ## 沒做／已知限制
 - `skill_audit` 無 30% 以上重疊，無需記錄。
-- `webapp-testing/examples/` 仍寫入上游沙盒路徑 `/mnt/user-data/outputs/`，在這台機器上要先改路徑才能跑；未改動。
+- `webapp-testing/examples/` 與 SKILL.md 範例寫入上游沙盒路徑 `/mnt/user-data/outputs/` 和 `/tmp/`，兩者在 Windows 上都不可用，要先改路徑才能跑；未改動。
 - 沒有引入上游 `references/*-checklist.md`，相關檢查清單內容缺席。
-- 尚未經 fresh-context reviewer 審查（status 維持 partial）。

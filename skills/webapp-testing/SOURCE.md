@@ -7,4 +7,4 @@
 ## Local modifications
 
 - `LICENSE.txt` -> `LICENSE`; frontmatter `license: Complete terms in LICENSE.txt` -> `license: Complete terms in LICENSE`.
-- `examples/` still write to `/mnt/user-data/outputs/` (upstream sandbox path); change it before running them on this machine.
+- `examples/` and the SKILL.md snippet write to `/mnt/user-data/outputs/` (upstream sandbox path) and `/tmp/`; neither is valid on Windows, so change the paths before running them on this machine.
