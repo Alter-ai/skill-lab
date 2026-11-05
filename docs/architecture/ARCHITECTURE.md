@@ -65,7 +65,9 @@ elements:
     name: Skills
     tech: Markdown
     description: SKILL.md sources under skills/
-    behavior: [Each skill directory has a SKILL.md with name and description frontmatter]
+    behavior:
+      - Each skill directory has a SKILL.md with name and description frontmatter
+      - Imported third-party skills carry LICENSE and a SOURCE.md recording upstream commit, copied date and local modifications
     code: skills/
     parent: skilllab
   - id: audit
