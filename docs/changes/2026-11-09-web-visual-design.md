@@ -1,13 +1,13 @@
 ---
 tier: T2
-status: partial
+status: done
 components: [skills]
 evidence:
   - skills/web-visual-design/scripts/palette_check.py:55
   - skills/web-visual-design/scripts/palette_check.py:98
 verified_by:
   - C:/Python313/python.exe -I tests/test_palette_check.py
-reviewed_by: []
+reviewed_by: [fresh-context subagent]
 supersedes: []
 ---
 ## 為什麼
