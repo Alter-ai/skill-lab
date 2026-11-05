@@ -46,6 +46,13 @@ with tempfile.TemporaryDirectory() as t:
     assert rows["t:big"]["flags"] == ["lines>500"] and rows["t:ok"]["flags"] == [], rows
     assert rows["t:big"]["lines"] > 500, rows["t:big"]
     assert [{o["a"], o["b"]} for o in out["overlap"]] == [{"t:dup1", "t:dup2"}], out["overlap"]
+with tempfile.TemporaryDirectory() as t2:
+    for arg, want in ((f"nope={Path(t2) / 'missing'}", "directory missing"), (f"e={t2}", "no */SKILL.md")):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), contextlib.redirect_stdout(io.StringIO()):
+            code = sa.main([arg])
+        assert code == 2 and want in err.getvalue(), (arg, code, err.getvalue())
+
 src = Path(sa.__file__).read_text(encoding="utf-8")
 assert "Users\\" not in src and "claude_pzs" not in src, "machine-specific path in skill_audit.py"
 print("ok")

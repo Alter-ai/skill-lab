@@ -15,7 +15,7 @@ python -I tools/skill_audit.py local=skills
 
 `tests/test_gantt.py` needs `matplotlib`. `tests/test_render.sh` needs mermaid-cli and is not run in CI.
 
-Developed and tested on Windows 11 with Python 3.13. CI also runs on Ubuntu.
+Developed and tested on Windows 11 with Python 3.13. CI is also configured for Ubuntu (not yet confirmed).
 
 ## Tier rules
 

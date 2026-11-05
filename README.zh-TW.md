@@ -14,7 +14,7 @@ AI 寫程式時容易走最短路徑：跳過規格、測試和審查。只靠�
 
 ## 快速開始（約五分鐘）
 
-需要 Python 3.13 和 git。
+需要 Python 3.13 和 git。在 Linux 或 macOS 上若指令名稱是 `python3`，請以 `python3` 取代 `python`。
 
 ```bash
 git clone https://github.com/Alter-ai/skill-lab
@@ -26,7 +26,9 @@ python -I tools/skill_audit.py local=skills  # 檢查本 repo 的 skills
 在一個用完即丟的 repo 試 gate：
 
 ```bash
+cd ..                                        # 離開 skill-lab；demo repo 與它同層
 mkdir demo && cd demo && git init
+git config user.name you && git config user.email you@example.com   # git 提交需要身分
 echo 'test_commands = []' > .agent-gate     # 有這個檔案，這個 repo 才啟用 gate
 echo hi > a.txt && git add .
 python ../skill-lab/tools/gate.py install   # 安裝 .git/hooks/commit-msg
@@ -55,6 +57,8 @@ hook 只在 `CLAUDE_CODE_CHILD_SESSION=1` 時作用，這個變數由 Claude Cod
 | `skills/web-visual-design` | 配色、中英混排字體和版面層次，附 WCAG 對比檢查 `palette_check.py` |
 | `skills/oss-release-readiness` | 公開前檢查 HEAD 和全部歷史，附 `release_check.py` |
 | `tools/` | `gate.py`、`skill_audit.py` |
+| `evals/` | 路由案例和評估結果 |
+| `examples/CLAUDE.md` | 使用者層規則檔（Tier 表和 skill 路由） |
 | `tests/` | 每個檔案各自檢查，通過時印出 `ok` |
 | `docs/` | 架構、變更紀錄、研究筆記 |
 
@@ -71,13 +75,14 @@ hook 只在 `CLAUDE_CODE_CHILD_SESSION=1` 時作用，這個變數由 Claude Cod
 
 ## AI 參與方式
 
-這個 repo 大部分由 Claude Code 在作者指示下寫成，用的就是 repo 所描述的工作流程。作者訂定目標和規則、閱讀並決定設計、執行這些工具。每項改動在 `docs/changes/` 有紀錄，寫明驗證了什麼、由誰驗證；測試由 AI 撰寫，功能類改動另由獨立的 AI reviewer 審查。這不是對每一行都做過獨立的人工審查，請當作未經審計的個人工具使用。
+這個 repo 大部分由 Claude Code 在作者指示下寫成，用的就是 repo 所描述的工作流程。作者訂定目標和規則、閱讀並決定設計、執行這些工具。測試也由 AI 撰寫。gate 啟用之後，T2 和 T3 的改動都有 `docs/changes/` 的 change file，且多數經過 fresh-context 的 AI 審查；更早的 commit 沒有，也不是每個 commit 都有 `Tier:` trailer。沒有對每一行做過獨立的人工審查，請當作未經審計的個人工具使用。
 
 ## 已知限制
 
-- 只在 Windows 11、Python 3.13 開發和測試。CI 也跑 Ubuntu，Linux 和 macOS 的使用經驗較少。
+- 只在 Windows 11、Python 3.13 開發和測試。CI 也設定在 Ubuntu 上執行，但尚未確認結果；Linux 和 macOS 的使用經驗較少。
 - gate 只作用於 Claude Code 工作階段，擋不了人。`gate.py` 還有 `pretool` 和 `evidence` 子命令，設計成 Claude Code hook 使用（用來擋繞過 commit hook 的嘗試）；快速開始沒有設定它們，在 `settings.json` 接上需要手動操作。
 - `tests/test_render.sh` 需要 mermaid-cli，CI 不跑。`tests/test_gantt.py` 需要 `matplotlib`。
+- `web-visual-design` 的評估只用 3 份 brief、由 AI 審查，沒有實際渲染，也沒有人看過結果；見 [evals/results/2026-11-web-visual-design.md](evals/results/2026-11-web-visual-design.md)。
 - 路由結果來自小樣本的 headless 執行，不是統計研究。
 
 ## 貢獻與安全

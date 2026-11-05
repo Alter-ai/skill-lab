@@ -97,7 +97,15 @@ def main(argv):
             roots[k] = Path(v)
         else:
             sys.exit(__doc__)
-    skills = load_all(roots or DEFAULT_ROOTS)
+    roots = roots or DEFAULT_ROOTS
+    skills = load_all(roots)
+    for pre, root in roots.items():
+        if not any(k.startswith(pre + ":") for k in skills):
+            print(f"warning: no skills found for {pre}={root} ({'directory missing' if not Path(root).is_dir() else 'no */SKILL.md'})",
+                  file=sys.stderr)
+    if not skills:
+        print("error: no skills found in any root; pass prefix=dir", file=sys.stderr)
+        return 2
     known = {f"{k.split(':')[0]}:{s['name']}" for k, s in skills.items()} | set(skills)
     if as_json:
         rows = [{"skill": k, "lines": s["lines"], "bytes": s["bytes"], "name_len": len(s["name"]),

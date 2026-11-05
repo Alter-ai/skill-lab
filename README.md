@@ -14,7 +14,7 @@ An AI coding session tends to take the shortest path: skip the spec, skip the te
 
 ## Quick start (about 5 minutes)
 
-Needs Python 3.13 and git.
+Needs Python 3.13 and git. Use `python3` instead of `python` where that is the name on Linux or macOS.
 
 ```bash
 git clone https://github.com/Alter-ai/skill-lab
@@ -26,7 +26,9 @@ python -I tools/skill_audit.py local=skills  # lint the skills in this repo
 Try the gate in a throwaway repo:
 
 ```bash
+cd ..                                        # leave skill-lab; the demo repo is a sibling
 mkdir demo && cd demo && git init
+git config user.name you && git config user.email you@example.com   # git needs an identity to commit
 echo 'test_commands = []' > .agent-gate     # this file turns the gate on for the repo
 echo hi > a.txt && git add .
 python ../skill-lab/tools/gate.py install   # installs .git/hooks/commit-msg
@@ -55,6 +57,8 @@ Written in this repo (MIT):
 | `skills/web-visual-design` | colour, Chinese/Latin type and layout guidance, with `palette_check.py` for WCAG contrast |
 | `skills/oss-release-readiness` | pre-publication check of HEAD and all history, with `release_check.py` |
 | `tools/` | `gate.py`, `skill_audit.py` |
+| `evals/` | routing cases and eval results |
+| `examples/CLAUDE.md` | the user-level rule file (tier table, skill routing) |
 | `tests/` | one self-checking script per file; each prints `ok` |
 | `docs/` | architecture, change records, research notes |
 
@@ -71,13 +75,14 @@ The root `LICENSE` covers only what the author wrote. The directories above foll
 
 ## How AI was used
 
-Most of this repo was written by Claude Code under the author's direction, using the same workflow the repo describes. The author set the goals and the rules, read and decided on the designs, and runs the tools. Each change has a record in `docs/changes/` that says what was verified and by whom; the tests were written by the AI, and a separate AI reviewer checked each feature change. This is not independent human review of every line. Treat the code as you would any unaudited personal tool.
+Most of this repo was written by Claude Code under the author's direction, using the workflow the repo describes. The author set the goals and the rules, read and decided on the designs, and runs the tools. The tests were also written by the AI. Since the gate was enabled, T2 and T3 changes have a change file in `docs/changes/` and most had a fresh-context AI review; earlier commits did not, and not every commit carries a `Tier:` trailer. There was no independent human review of every line. Treat the code as you would any unaudited personal tool.
 
 ## Known limits
 
-- Developed and tested on Windows 11 with Python 3.13. CI also runs on Ubuntu; Linux and macOS use is less tested.
+- Developed and tested on Windows 11 with Python 3.13. CI is configured to run on Ubuntu as well, but that has not been confirmed yet; Linux and macOS use is less tested.
 - The gate only acts inside Claude Code sessions. It does not stop a human. `gate.py` also has `pretool` and `evidence` subcommands meant to run as Claude Code hooks (they block attempts to bypass the commit hook); the quick start does not set those up, and wiring them in `settings.json` is manual.
 - `tests/test_render.sh` needs mermaid-cli and is not run in CI. `tests/test_gantt.py` needs `matplotlib`.
+- The `web-visual-design` skill was evaluated on 3 briefs by AI reviewers, nothing was rendered, and no human saw the results; see [evals/results/2026-11-web-visual-design.md](evals/results/2026-11-web-visual-design.md).
 - Routing results come from small samples of headless runs, not a statistical study.
 
 ## Contributing and security

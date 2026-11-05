@@ -31,4 +31,4 @@ skill-lab 要公開。工作樹要先乾淨（工具裡沒有本機路徑）、�
 - 進行中（partial）：尚未審查。
 - 快速開始的 `CLAUDE_CODE_CHILD_SESSION=1 git commit` 無法在 Claude session 內字面執行（pretool hook 擋下改動該變數的指令）；改在 session 內直接 `git commit`，因為該變數已設，得到同樣的 `gate: blocked`。
 - CI 在 Ubuntu 上的結果未驗證；測試只在 Windows 跑過。
-- Scorecard 的檢查清單和權重憑記憶寫成，未對照線上文件。
+- Scorecard 估計依官方 docs/checks.md（20 項）；Packaging、Signed-Releases、Webhooks 無物可查時的計分方式官方頁面沒寫，估計中按保守假設處理。

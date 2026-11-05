@@ -2,6 +2,7 @@ name: test
 
 on:
   push:
+    branches: [master]
   pull_request:
 
 permissions:
@@ -14,6 +15,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
