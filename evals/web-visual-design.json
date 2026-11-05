@@ -1,0 +1,25 @@
+{
+  "briefs": [
+    {
+      "id": "a-bilingual-dev-brand",
+      "brief": "Design the visual system for a personal brand site of a freelance software developer. The site is bilingual (Traditional Chinese and English) and its positioning is \"can be verified\": every claim links to a repository, a test result or a public record. Audience: hiring managers and technical leads. Deliver a tokens.json (light and dark modes, 4 to 6 named colors each, with contrast pairs) and a one-page type and layout spec."
+    },
+    {
+      "id": "b-onprem-rag-docs",
+      "brief": "Design the visual system for a documentation site of an on-premises RAG (retrieval-augmented generation) tool. Dark mode is the primary mode and light mode must still be complete. Readers are engineers who spend long sessions reading and scanning code samples and configuration tables. Deliver a tokens.json (light and dark modes, 4 to 6 named colors each, with contrast pairs) and a one-page type and layout spec."
+    },
+    {
+      "id": "c-zh-community-event",
+      "brief": "Design the visual system for a landing page of a community event, written mainly in Traditional Chinese with some English terms and speaker names. The page shows a schedule, a speaker list and a sign-up button, and is read mostly on phones. Deliver a tokens.json (light and dark modes, 4 to 6 named colors each, with contrast pairs) and a one-page type and layout spec."
+    }
+  ],
+  "rubric": [
+    {"id": "color", "name": "色彩", "pass": "palette_check 回 0，兩個模式都有"},
+    {"id": "color-rationale", "name": "色彩理由", "pass": "每個顏色寫明角色；說明如何在 OKLCH 或感知基礎上調整明度"},
+    {"id": "memorable", "name": "記憶點", "pass": "指明單一記憶點，其餘克制"},
+    {"id": "avoid-default", "name": "避開預設", "pass": "不是 Inter 全站加 Tailwind slate、光暈背景的組合"},
+    {"id": "zh-typography", "name": "中文排版", "pass": "設定 lang 和地區字形；處理標點和中英混排；中文行高和字重有調整理由"},
+    {"id": "font-loading", "name": "字型載入", "pass": "有子集、font-display、大小預算和授權確認"},
+    {"id": "hierarchy", "name": "層次", "pass": "字級數量和間距有規則，能通過瞇眼測試的描述"}
+  ]
+}
