@@ -1,6 +1,6 @@
 ---
 tier: T2
-status: partial
+status: done
 components: [skilllab, audit, gate, skills]
 evidence:
   - tools/skill_audit.py:21
@@ -8,7 +8,7 @@ evidence:
 verified_by:
   - C:/Python313/python.exe -I tests/test_skill_audit.py
   - C:/Python313/python.exe -I tests/test_palette_check.py
-reviewed_by: []
+reviewed_by: [fresh-context subagent]
 supersedes: []
 ---
 ## 為什麼
