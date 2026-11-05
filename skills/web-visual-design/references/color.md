@@ -182,10 +182,15 @@ Material guidance was **not verified**: the pages read returned only a title, so
 
 About 2 primary and 2 secondary colours in a simple design; keep bright warm colours for warnings `[expert opinion: NNG-HIER, rule of thumb]`. The tokens format requires 4 to 6 named colours per mode.
 
+## Choosing a hue
+
+Before settling, write three candidate hue families from clearly different parts of the wheel, one of them truly neutral (chroma near 0). Give each a reason drawn from this brief's content or audience, then say why the chosen one beats the others. No hue is banned; only a reason from the brief counts. Name tokens for this design's own roles, and do not copy token names or pair order from an example without a reason. `[working default]`
+
 ## Defaults to notice
 
 - Tailwind slate neutrals (`#0f172a`, `#1e293b`, `#64748b`, `#f1f5f9`, `#f8fafc`) `[vendor guidance: TW-COLORS]` with a glow background.
 - White or off-white with blue-black neutrals and one blue or teal accent: all three no-skill runs landed here. `[measured: BASELINE, n=3]`
 - **Warm grey near H 85 to 90, L about .98 and .20, surface a few hundredths away:** all three runs with an earlier version of this skill landed here on unrelated briefs, because it taught avoiding blue-black and gave one example. `[measured: EVAL-R1, n=3]`
+- **Teal or green neutrals near H 160 to 200, dark L about .20 to .23:** all three runs of the revised skill used them for three different audiences, replacing warm grey with a new default. `[working default]` observed in testing (EVAL-R2, n=3), not a standard.
 
 None is wrong in itself. Each needs a reason from this brief.

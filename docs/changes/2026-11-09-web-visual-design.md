@@ -27,8 +27,15 @@ supersedes: []
 - 字型堆疊和 `text-autospace` 的行為在 Chrome 152 實測過；`pyftsubset` 在本機 Noto Sans TC 上實跑過，`--layout-features='*'` 只增加體積，已移除。
 - Material 3 查不到內容，不採用。
 
+## 評測結果
+結果檔：`evals/results/2026-11-web-visual-design.md`。三個 brief，有 skill 對無 skill，Sonnet 產出，Opus 盲評。第一輪 rubric 7:1、6:3、7:2，第二輪 6:0、6:3、6:3，兩輪審查者都選有 skill 的版本（3/3），計畫的通過條件兩輪皆達成。第二輪改善：長度受控、有物件規則、技術錯誤減少。
+
 ## 沒做／已知限制
-- 進行中（partial）：已有 `palette_check.py`、其測試、評測檔，以及 `SKILL.md` 和 `references/`。
-- 第二輪 GREEN 量測和結果檔尚未做；路由案例已加，但還沒跑（Task 5）。
+- 進行中（partial）：路由案例已加，但還沒跑（Task 5）。
+- 評測後加的指引修改（三個不同色相候選、不沿用範例 token 名稱、中文行距與字重要有理由、算術與「只用於」自查）沒有量測。
+- 趨同仍在：第二輪中性色全落在色相 160 到 200，token 名稱與配對順序相同；基準組也趨同，部分是模型傾向。
+- rubric 獎勵「寫出來」，分差有一部分來自這點。
+- 樣本只有 3 個 brief。
+- 沒有渲染任何輸出，也沒有人看過；通過不代表專業設計師水準。
 - 字型堆疊的 `unicode-range` 寫法是推導而來，沒有權威來源，只在 Chrome 152 測過，Firefox 和 Safari 沒測。
 - Noto Sans TC 子集是否要改名，要由人判斷；skill 裡寫的不是法律意見。

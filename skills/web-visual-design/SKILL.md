@@ -34,7 +34,7 @@ A step that does not apply gets one clause or nothing. A step you could not do i
 
 1. **Frame.** Say who reads this, on what device, for how long, what objects the content has, and which language and region. Assume where the brief is silent, and say so.
 2. **Pick one memorable element**, tied to the subject. Say what it is, where it appears, and what is held back for it.
-3. **Derive the colours in OKLCH.** Write `tokens.json`. Neutrals, lightness and chroma follow this audience and content. Say what in this brief makes the result differ from the examples in `references/color.md`. Warm grey is not an escape from blue-black; it is another default. Rebuild dark mode rather than inverting it. If the brief names a primary mode, say how that mode is implemented.
+3. **Derive the colours in OKLCH.** Write `tokens.json`. Neutrals, lightness and chroma follow this audience and content. Say what in this brief makes the result differ from the examples in `references/color.md`. Before settling a hue, write three candidate hue families from clearly different parts of the wheel, one a truly neutral option (chroma near 0), each with a reason from this brief's content or audience, and say why the chosen one beats the others. No hue is banned; the reason must come from the brief. Warm grey and teal-green neutrals (H 160 to 200) are both observed defaults. Name tokens for this design's own roles, not the examples' names or pair order. Rebuild dark mode rather than inverting it. If the brief names a primary mode, say how that mode is implemented.
 4. **Check them.** Name borders and focus rings that carry meaning as tokens, because the checker sees only named colours. Declare every pair you use: `text`, `muted` and `accent` on every surface; button labels; borders and focus rings as `ui`. Empty pairs fail, but listing only some pairs still passes, so list them all. Chinese text uses `body`, not `large`. Run this, and fix until it exits 0:
 
    ```
@@ -62,7 +62,8 @@ Same checks on what is there: read computed colours into a `tokens.json` and run
 | Memorable element | Exactly one, and what is held back is named |
 | Avoid defaults | Not Inter across the site with Tailwind slate and a glow background; any default kept has a reason from this brief |
 | Specific to this brief | No value from the reference examples is reused without a reason; another brief would get a visibly different base |
-| Chinese type | `lang` and regional glyphs; punctuation and mixing handled by something buildable; line height and weight have reasons |
+| Chinese type | `lang` and regional glyphs; punctuation and mixing handled by something buildable; the Chinese line height and each weight chosen have a stated reason |
+| Arithmetic | Column widths, breakpoints and code widths add up; every "X is used only for Y" holds across the whole spec |
 | Font loading | Subset, `font-display`, size budget and licence check for each web font |
 | Hierarchy | Sizes and spacing are counted and follow a rule; the squint description is honestly labelled |
 | Objects | Every object in the brief has type, colour and spacing rules |
