@@ -1,7 +1,7 @@
 ---
 tier: T2
 status: partial
-components: [skilllab, audit, skills]
+components: [skilllab, audit]
 evidence:
   - tools/skill_audit.py:21
   - tests/test_skill_audit.py:50
