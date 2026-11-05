@@ -19,7 +19,7 @@ def _encode(x):
     return s * (12.92 * x if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055)
 
 
-def parse_color(value):
+def parse_color(value: str) -> tuple[float, float, float]:
     if not isinstance(value, str):
         raise ValueError(f"not a string: {value!r}")
     v = value.strip()
@@ -31,6 +31,8 @@ def parse_color(value):
     if m := _OKLCH.fullmatch(v):
         L = float(m.group(1)) / (100 if m.group(2) else 1)
         C, H = float(m.group(3)), math.radians(float(m.group(4)))
+        if L < 0 or C < 0:
+            raise ValueError(f"negative lightness or chroma: {value}")
         a, b = C * math.cos(H), C * math.sin(H)
         l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
         mm = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
@@ -50,7 +52,7 @@ def _luminance(rgb):
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
-def contrast(a, b):
+def contrast(a: tuple, b: tuple) -> float:
     hi, lo = sorted((_luminance(a), _luminance(b)), reverse=True)
     return (hi + 0.05) / (lo + 0.05)
 
@@ -71,13 +73,20 @@ def _check_mode(name, mode):
             probs.append(f"{name}: color {k}: {e}")
     if not 4 <= len(mode["colors"]) <= 6:
         probs.append(f"{name}: {len(mode['colors'])} colors, need 4 to 6")
-    if not mode.get("pairs"):
+    pairs = mode.get("pairs")
+    if not pairs:
         probs.append(f"{name}: no pairs to check")
-    for p in mode.get("pairs") or []:
+    elif not isinstance(pairs, list):
+        probs.append(f"{name}: pairs must be a list")
+        pairs = []
+    for p in pairs or []:
+        if not isinstance(p, dict):
+            probs.append(f"{name}: pair is not an object: {p!r}")
+            continue
         fg, bg, use = p.get("fg"), p.get("bg"), p.get("use")
-        if use not in MIN_RATIO:
+        if not isinstance(use, str) or use not in MIN_RATIO:
             probs.append(f"{name}: unknown use {use!r} for {fg} on {bg}")
-        elif fg not in colors or bg not in colors:
+        elif not (isinstance(fg, str) and isinstance(bg, str)) or fg not in colors or bg not in colors:
             probs.append(f"{name}: unknown or invalid color in pair {fg} on {bg}")
         else:
             r = contrast(colors[fg], colors[bg])
@@ -86,7 +95,7 @@ def _check_mode(name, mode):
     return probs
 
 
-def check(tokens):
+def check(tokens: dict) -> list[str]:
     modes = tokens.get("modes") if isinstance(tokens, dict) else None
     modes = modes if isinstance(modes, dict) else {}
     probs = []
@@ -98,7 +107,7 @@ def check(tokens):
     return probs
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     if len(argv) != 1:
         print("usage: palette_check.py <tokens.json>", file=sys.stderr)
         return 2
