@@ -79,7 +79,7 @@ hook 只在 `CLAUDE_CODE_CHILD_SESSION=1` 時作用。作者實測（Windows 11 
 
 ## 已知限制
 
-- 只在 Windows 11、Python 3.13 開發和測試。CI 也設定在 Ubuntu 上執行，但尚未確認結果；Linux 和 macOS 的使用經驗較少。
+- 只在 Windows 11、Python 3.13 開發和測試。CI 也在 Ubuntu 上通過；Linux 和 macOS 的使用經驗較少。
 - gate 只作用於 Claude Code 工作階段，擋不了人。`gate.py` 還有 `pretool` 和 `evidence` 子命令，設計成 Claude Code hook 使用（用來擋繞過 commit hook 的嘗試）；快速開始沒有設定它們，在 `settings.json` 接上需要手動操作。
 - `tests/test_render.sh` 需要 mermaid-cli，CI 不跑。`tests/test_gantt.py` 需要 `matplotlib`。
 - `web-visual-design` 的評估只用 3 份 brief、由 AI 審查，沒有實際渲染，也沒有人看過結果；見 [evals/results/2026-11-web-visual-design.md](evals/results/2026-11-web-visual-design.md)。

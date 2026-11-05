@@ -79,7 +79,7 @@ Most of this repo was written by Claude Code under the author's direction, using
 
 ## Known limits
 
-- Developed and tested on Windows 11 with Python 3.13. CI is configured to run on Ubuntu as well, but that has not been confirmed yet; Linux and macOS use is less tested.
+- Developed and tested on Windows 11 with Python 3.13. CI also passes on Ubuntu; Linux and macOS use is less tested.
 - The gate only acts inside Claude Code sessions. It does not stop a human. `gate.py` also has `pretool` and `evidence` subcommands meant to run as Claude Code hooks (they block attempts to bypass the commit hook); the quick start does not set those up, and wiring them in `settings.json` is manual.
 - `tests/test_render.sh` needs mermaid-cli and is not run in CI. `tests/test_gantt.py` needs `matplotlib`.
 - The `web-visual-design` skill was evaluated on 3 briefs by AI reviewers, nothing was rendered, and no human saw the results; see [evals/results/2026-11-web-visual-design.md](evals/results/2026-11-web-visual-design.md).
