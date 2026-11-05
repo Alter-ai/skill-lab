@@ -83,6 +83,7 @@ elements:
       - Flags size, frontmatter limits, dangling references and body overlap
       - Exits 1 when any skill is flagged
       - "--json prints skills, flagged count and overlap pairs as JSON"
+      - Roots are given as prefix=dir; with none it reads only the ponytail marketplace under the home directory, so no machine path is hard-coded
     code: tools/skill_audit.py
     parent: skilllab
   - id: gate

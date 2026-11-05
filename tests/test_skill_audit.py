@@ -46,4 +46,6 @@ with tempfile.TemporaryDirectory() as t:
     assert rows["t:big"]["flags"] == ["lines>500"] and rows["t:ok"]["flags"] == [], rows
     assert rows["t:big"]["lines"] > 500, rows["t:big"]
     assert [{o["a"], o["b"]} for o in out["overlap"]] == [{"t:dup1", "t:dup2"}], out["overlap"]
+src = Path(sa.__file__).read_text(encoding="utf-8")
+assert "Users\\" not in src and "claude_pzs" not in src, "machine-specific path in skill_audit.py"
 print("ok")

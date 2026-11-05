@@ -17,13 +17,8 @@ NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 REF_RE = re.compile(r"(?<![\w/.-])([a-z][a-z0-9-]*):([a-z][a-z0-9-]*)\b")  # plugin:skill
 FILE_RE = re.compile(r"\]\((?!https?:|#|mailto:)([^)\s]+)\)|`((?:scripts|references|assets|templates)/[^`\s]+)`")
 
-# shortcut: machine-specific; these hashed paths change when the app reinstalls plugins, so pass roots on the CLI then
-_APP = Path(r"<redacted>")
-DEFAULT_ROOTS = {
-    "ponytail": Path(r"<home>\.claude\plugins\marketplaces\ponytail\skills"),
-    "superpowers": _APP / r"<redacted>\skills",
-    "anthropic-skills": _APP / r"<redacted>\skills",
-}
+# shortcut: only the ponytail marketplace path is stable; other plugin roots are hashed, so pass them as prefix=dir
+DEFAULT_ROOTS = {"ponytail": Path.home() / ".claude" / "plugins" / "marketplaces" / "ponytail" / "skills"}
 
 
 def load(path):

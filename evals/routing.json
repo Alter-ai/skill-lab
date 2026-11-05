@@ -1,5 +1,5 @@
 {
-  "_note": "Baseline measured with ~/.claude/CLAUDE.md installed (2026-11-03); no pre-rule baseline exists. Run each prompt in a fresh desktop-app session and record the skills that load in observed_baseline; set expected from the rules in CLAUDE.md.draft. Re-run after every change and diff. Run 2026-11-03: c1-a/c1-c in an empty folder, others in seeded fixtures; one sample per case; wrapper text (background + notes folder) precedes each prompt. Tier cases (area \"tier\"): 每題 5 runs; record tier chosen and whether brainstorming loaded. Tier baseline run 2026-11-04 (20 cases x 5 = 100 runs): tier on first line correct 100/100; T0/T1 brainstorming false trigger 0/50; T2/T3 brainstorming loaded 50/50. Method deviation: desktop sessions could not be started from a side session, so runs used headless `claude -p` (CLI 2.1.316, claude-opus-5-5) with superpowers 6.4.2 loaded via --plugin-dir (the CLI does not install it otherwise; without it brainstorming cannot fire). The CLI lacks the desktop-app system prompt. Bare prompt, no wrapper text; fresh copy of a seeded fixture repo per run (t-t3-1: empty folder); default permissions, so writes/Bash were denied mid-run; --max-turns 15. Only 'brainstorming loaded' is recorded, not whether the bounded vs full path was followed.",
+  "_note": "Baseline measured with ~/.claude/CLAUDE.md installed (2026-11-03); no pre-rule baseline exists. Run each prompt in a fresh desktop-app session and record the skills that load in observed_baseline; set expected from the rules in CLAUDE.md.draft. Re-run after every change and diff. Run 2026-11-03: c1-a/c1-c in an empty folder, others in seeded fixtures; one sample per case; wrapper text (background + notes folder) precedes each prompt. Tier cases (area \"tier\"): 每題 5 runs; record tier chosen and whether brainstorming loaded. Tier baseline run 2026-11-04 (20 cases x 5 = 100 runs): tier on first line correct 100/100; T0/T1 brainstorming false trigger 0/50; T2/T3 brainstorming loaded 50/50. Method deviation: desktop sessions could not be started from a side session, so runs used headless `claude -p` (CLI 2.1.316, claude-opus-5-5) with superpowers 6.4.2 loaded via --plugin-dir (the CLI does not install it otherwise; without it brainstorming cannot fire). The CLI lacks the desktop-app system prompt. Reduced regression run 2026-11-09 (headless claude -p, --model sonnet, --max-turns 3, empty temp dir, 11 runs): wvd-1 and ossr-1 x3 each (both loaded their own skill 3/3), plus the first case of each non-tier area once; the other 28 cases were not re-run. Non-tier first cases vs baseline: c1-a brainstorming (same); c4-a systematic-debugging (same); c2-a loaded systematic-debugging where baseline loaded none (empty dir, no fixture); c3-a no skill where baseline used ponytail-review (no PR present); c5-a Glob only, no files written. None involve a skill of ours. Bare prompt, no wrapper text; fresh copy of a seeded fixture repo per run (t-t3-1: empty folder); default permissions, so writes/Bash were denied mid-run; --max-turns 15. Only 'brainstorming loaded' is recorded, not whether the bounded vs full path was followed.",
   "cases": [
     {
       "id": "c1-a",
@@ -286,16 +286,16 @@
       "area": "web-visual-design",
       "prompt": "幫這個網站挑配色和字體",
       "expected": "web-visual-design loads",
-      "observed_baseline": "",
-      "verdict": "pending"
+      "observed_baseline": "3 runs (headless CLI sonnet, 2026-11-09, empty dir): Skill(web-visual-design) 3/3; asked for site details",
+      "verdict": "match"
     },
     {
       "id": "ossr-1",
       "area": "oss-release-readiness",
       "prompt": "準備把這個 repo 公開到 GitHub，先檢查有沒有不能公開的東西",
       "expected": "oss-release-readiness loads",
-      "observed_baseline": "",
-      "verdict": "pending"
+      "observed_baseline": "3 runs (headless CLI sonnet, 2026-11-09, empty dir): Skill(oss-release-readiness) 3/3; hit --max-turns 3 before answering",
+      "verdict": "match"
     }
   ]
 }

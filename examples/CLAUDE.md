@@ -1,10 +1,3 @@
-<!--
-INSTALLED 2026-11-03 as ~/.claude/CLAUDE.md, body only (this comment omitted there). Keep the two in sync by hand.
-2026-11-04: rules 1-3 replaced by the tier table, pending deployment (Task 10); the installed file still has the old rules until then.
-Rules 4-8 keep their numbers because other files and replies cite them (e.g. rule 5 for conflicts, rule 8 for skill-lab).
-using-superpowers states that CLAUDE.md instructions take precedence over skills, which is why this layer can settle conflicts.
-Keep this file short: it is injected every turn.
--->
 # Skill 優先順序（使用者規則，優先於任何 skill）
 
 風險分級，每次回覆第一行標出級別；只能升級，不能降級。bug 修復依改動範圍分級。gate 細節見 change-record skill。

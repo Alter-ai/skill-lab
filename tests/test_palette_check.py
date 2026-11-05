@@ -1,4 +1,6 @@
 """Self-check for skills/web-visual-design/scripts/palette_check.py. Run: python -I tests/test_palette_check.py"""
+import contextlib
+import io
 import json
 import sys
 import tempfile
@@ -83,9 +85,10 @@ with tempfile.TemporaryDirectory() as t:
     badf.write_text(json.dumps(cases["low contrast"]), encoding="utf-8")
     bom = d / "bom.json"
     bom.write_bytes(b"\xef\xbb\xbf" + good.read_bytes())
-    assert pc.main([str(good)]) == 0
-    assert pc.main([str(badf)]) == 1
-    assert pc.main([str(d / "missing.json")]) == 2
-    assert pc.main([]) == 2
-    assert pc.main([str(bom)]) == 0
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):  # expected error output
+        assert pc.main([str(good)]) == 0
+        assert pc.main([str(badf)]) == 1
+        assert pc.main([str(d / "missing.json")]) == 2
+        assert pc.main([]) == 2
+        assert pc.main([str(bom)]) == 0
 print("ok")
