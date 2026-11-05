@@ -1,13 +1,13 @@
 ---
 tier: T2
-status: partial
+status: done
 components: [skills]
 evidence:
   - skills/oss-release-readiness/scripts/release_check.py:34
   - skills/oss-release-readiness/scripts/release_check.py:111
 verified_by:
   - C:/Python313/python.exe -I tests/test_release_check.py
-reviewed_by: []
+reviewed_by: [fresh-context subagent]
 supersedes: []
 ---
 ## 為什麼
