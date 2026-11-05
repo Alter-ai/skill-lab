@@ -104,4 +104,74 @@ assert code == 2 and "no commits" in text, (code, text)
 assert quiet_main([str(repo())]) == (0, "")
 code, text = quiet_main([str(repo({"a.txt": S})), "--forbid", S])
 assert code == 1 and "forbid[0] content a.txt:1" in text and S not in text, text
+# --- fix round 1 ---
+import os  # noqa: E402
+import stat  # noqa: E402
+
+# commit messages and tags (message, tagger email) are scanned; findings stay quiet
+r = repo()
+run(r, "commit", "-q", "--allow-empty", "-m", f"note {S}")
+out = rc.scan(r, [S])
+assert "forbid[0] commit-message 1 commits" in out and not any(S in f for f in out), out
+r = repo()
+run(r, "tag", "-a", "v1", "-m", f"tag {S}")
+assert "forbid[0] tag 1 tags" in rc.scan(r, [S])
+r = repo()
+run(r, "-c", f"user.email={S}", "tag", "-a", "v2", "-m", "x")
+out = rc.scan(r, [S])
+assert "forbid[0] tag 1 tags" in out and not first(out, "forbid[0] author-email"), out
+
+# only the file name carries the string
+out = rc.scan(repo({f"{S}-notes.txt": "clean"}), [S])
+assert out == ["forbid[0] path-head 1 files", "forbid[0] path-history 1 files"], out
+r = repo({f"{S}-old.txt": "clean"})
+run(r, "rm", "-q", f"{S}-old.txt")
+commit(r)
+out = rc.scan(r, [S])
+assert not first(out, "forbid[0] path-head") and "forbid[0] path-history 1 files" in out, out
+
+# submodule (gitlink) has size "-"
+r = repo()
+run(r, "update-index", "--add", "--cacheinfo", f"160000,{'b' * 40},sub")
+run(r, "commit", "-q", "-m", "sub")
+assert rc.scan(r, []) == []
+
+# notebooks: v3 outputs, unreadable
+out = rc.scan(repo({"v3.ipynb": json.dumps({"worksheets": [{"cells": [{"outputs": [{"o": 1}]}]}]}),
+                    "bad.ipynb": "not json"}), [])
+assert out == ["notebook-unreadable bad.ipynb", "notebook-output v3.ipynb"] or \
+    sorted(out) == ["notebook-output v3.ipynb", "notebook-unreadable bad.ipynb"], out
+
+# forbid validation
+for bad in ("--forbid=", "--forbid=a\nb"):
+    assert quiet_main([str(repo()), bad])[0] == 2, bad
+
+# sensitive paths: case-insensitive, .env.*
+out = rc.scan(repo({"KEY.PEM": "p", ".env.local": "k", "env.txt": "e"}), [])
+assert sorted(out) == ["sensitive-path .env.local", "sensitive-path KEY.PEM"], out
+
+# run from a subdirectory
+r = repo({"sub/x.txt": "ok", "top.txt": S})
+code, text = quiet_main([str(r / "sub"), f"--forbid={S}"])
+assert code == 1 and "forbid[0] content top.txt:1" in text, (code, text)
+
+# binary-only match at HEAD and in history
+r = repo()
+(r / "bin.dat").write_bytes(b"\0\0" + S.encode() + b"\0")
+commit(r)
+out = rc.scan(r, [S])
+assert "forbid[0] content bin.dat binary" in out and "forbid[0] history 1 commits" in out, out
+
+# all forbidden values are redacted in one pass, longest first
+out = rc.scan(repo({"abc.txt": "abc\n"}), ["ab", "abc"])
+assert "forbid[0] content <forbid[1]>.txt:1" in out and "forbid[1] content <forbid[1]>.txt:1" in out, out
+
+# git failure is exit 2, not findings
+r = repo()
+tree = run(r, "rev-parse", "HEAD^{tree}").strip()
+obj = r / ".git" / "objects" / tree[:2] / tree[2:]
+os.chmod(obj, stat.S_IWRITE)
+obj.unlink()
+code, text = quiet_main([str(r)])
+assert code == 2 and "git" in text, (code, text)
 print("ok")
