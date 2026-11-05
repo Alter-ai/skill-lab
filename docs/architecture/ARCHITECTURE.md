@@ -15,7 +15,7 @@ C4Context
   Rel(dev, skilllab, "Edits and tests")
   Rel(skilllab, claude, "Deploys skills and hooks to", "~/.claude copy")
 ```
-**Scope:** one developer, one repo, one consumer (Claude Code on this machine). Other plugins (superpowers, ponytail) are out of scope.
+**Scope:** one developer, one repo, one consumer (Claude Code). Other plugins (superpowers, ponytail) are out of scope.
 **Key decisions:** source of truth stays in this repo; `~/.claude` holds copies only (CLAUDE.md rule 8). Design: `docs/changes/2026-11-04-personal-workflow-design.md`.
 
 ## 2. Container
@@ -70,7 +70,7 @@ elements:
       - Imported third-party skills carry LICENSE and a SOURCE.md recording upstream commit, copied date and local modifications
       - web-visual-design holds graded colour, Chinese-Latin type and layout knowledge in references/; its procedure keeps the spec to the brief's length with working in an appendix
       - web-visual-design/scripts/palette_check.py checks tokens.json for WCAG 2.2 contrast on declared pairs; exits 0 pass, 1 problems, 2 unreadable or bad usage; empty pairs and malformed input are problems, not crashes
-      - oss-release-readiness/scripts/release_check.py scans HEAD and all refs of a git repo for forbidden strings, author emails, sensitive paths, notebook outputs, files over 5 MiB, missing LICENSE/README.md/SECURITY.md and missing skill attribution; findings never echo the forbidden text; exits 0 clean, 1 findings, 2 not a git repo or no commits
+      - oss-release-readiness/scripts/release_check.py scans HEAD and all refs of a git repo for forbidden strings (in file contents, commit messages, annotated tags, file names, ref names, and author and committer names and emails), a shallow clone, sensitive paths, notebook outputs, files over 5 MiB, missing LICENSE/README.md/SECURITY.md and missing skill attribution; findings never echo the forbidden text; exits 0 clean, 1 findings, 2 not a git repo, no commits, bad usage or a git failure
     code: skills/
     parent: skilllab
   - id: audit
@@ -81,7 +81,7 @@ elements:
     description: Static checks for SKILL.md files
     behavior:
       - Flags size, frontmatter limits, dangling references and body overlap
-      - Exits 1 when any skill is flagged
+      - Exits 1 when any skill is flagged, 2 when no skills are found in any root
       - "--json prints skills, flagged count and overlap pairs as JSON"
       - Roots are given as prefix=dir; with none it reads only the ponytail marketplace under the home directory, so no machine path is hard-coded
     code: tools/skill_audit.py

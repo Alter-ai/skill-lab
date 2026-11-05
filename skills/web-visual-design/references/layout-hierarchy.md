@@ -35,7 +35,7 @@ Do not default to doubling from 8. Every run of an earlier version of this skill
 
 ## Reading column
 
-- Latin benchmark columns are 644 and 607px wide, with line-heights of about 1.65 and 1.75. `[measured: D7, n=2 each, not a law]` Chinese figures are in `references/typography-zh-en.md`.
+- Latin benchmark columns are 644 and 607px wide, with line-heights of about 1.65 and 1.75. `[measured: D7, n=2 each, not a law; D7 comes from an unpublished plan]` Chinese figures are in `references/typography-zh-en.md`.
 - State widths in `em` for Chinese and `ch` for Latin. `[derived from MDN-LEN]`
 
 ## Objects on the page

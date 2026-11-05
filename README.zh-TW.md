@@ -23,7 +23,7 @@ python -I tests/test_skill_audit.py          # 印出 ok
 python -I tools/skill_audit.py local=skills  # 檢查本 repo 的 skills
 ```
 
-在一個用完即丟的 repo 試 gate：
+在一個用完即丟的 repo 試 gate（快速開始是 bash 語法；Windows 請用 Git Bash）：
 
 ```bash
 cd ..                                        # 離開 skill-lab；demo repo 與它同層
@@ -42,7 +42,7 @@ gate: blocked (see skill change-record)
 missing 'Tier: T0|T1|T2|T3' trailer in commit message
 ```
 
-hook 只在 `CLAUDE_CODE_CHILD_SESSION=1` 時作用，這個變數由 Claude Code 在自己的工作階段中設定。你在一般終端機直接 `git commit` 不受檢查。
+hook 只在 `CLAUDE_CODE_CHILD_SESSION=1` 時作用。作者實測（Windows 11 的 Claude Code 桌面版，見 `docs/changes/2026-11-04-hook-payload-spike.md`）Bash 與 PowerShell 工具中有設定此變數；其他版本與平台未驗證。你在一般終端機直接 `git commit` 不受檢查。
 
 要使用 skills，把需要的目錄從 `skills/` 複製到 `~/.claude/skills/`。`examples/CLAUDE.md` 是作者使用的使用者層規則檔（Tier 表和 skill 路由），使用前請自行調整。
 

@@ -6,6 +6,8 @@ Three briefs with different audiences (a, b, c). For each brief, one arm produce
 
 Round 1 used the first version of the skill. After fixes, round 2 reran only the with-skill arm on the same briefs, against the same baseline outputs, graded by a fresh Opus reviewer.
 
+The raw outputs and the reviewer transcripts are not published; this file holds only the summary figures.
+
 ## Results
 
 | | a | b | c | Would build from with-skill |

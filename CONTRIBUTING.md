@@ -28,7 +28,7 @@ Every commit declares a risk tier in its message, and the tier gate (`tools/gate
 | T2 | new behaviour, several files, or high-risk paths such as `.github/` | a change file in `docs/changes/` and an independent review |
 | T3 | new subsystem, public interface change, restructure | spec and plan in `docs/changes/`, review per task |
 
-Commit trailers:
+Commit trailers (the gate matches each as a whole line anywhere in the message by regex; they need not be in the final trailer block):
 
 ```
 Tier: T2

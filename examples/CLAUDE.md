@@ -20,10 +20,10 @@
 
 6. 需求釐清與規格只用 superpowers:brainstorming。市場與使用者研究用 competitive-brief、user-research、synthesize-research，結論寫回專案的 BACKLOG.md（backlog skill）。
 7. 架構圖用 c4-architecture，設計決策寫成 ADR（documentation-and-adrs）。
-8. 個人 skill 的原始檔在 `~/code/skill-lab/skills`，改那裡再部署到 `~/.claude/skills`，不要直接改部署後的副本。
+8. 個人 skill 的原始檔在 skill-lab repo 的 `skills/`，改那裡再部署到 `~/.claude/skills`，不要直接改部署後的副本。
 
 # 環境
 
 - Windows 11。Bash 工具是 Git Bash，另有 PowerShell；路徑用正斜線。
-- `$HOME/mnt/...`、`/mnt/skills`、`/opt/pw-browsers` 是 Cowork Linux 沙盒路徑，這台機器上不存在，遇到就說明並跳過，不要硬跑。
-- `uv run` 一律加 `--isolated --no-project --python 3.13`：否則會抓到 `~/code/.venv`（Python 3.10，numpy 已損壞）。
+- `$HOME/mnt/...`、`/mnt/skills`、`/opt/pw-browsers` 是 Cowork Linux 沙盒路徑，在 Windows 上不存在，遇到就說明並跳過，不要硬跑。
+- `uv run` 一律加 `--isolated --no-project --python 3.13`：否則會抓到上層目錄的 `.venv`，其 Python 版本或套件可能不符。

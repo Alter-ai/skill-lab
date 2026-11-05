@@ -23,7 +23,7 @@ python -I tests/test_skill_audit.py          # prints: ok
 python -I tools/skill_audit.py local=skills  # lint the skills in this repo
 ```
 
-Try the gate in a throwaway repo:
+Try the gate in a throwaway repo (the quick start is bash syntax; on Windows use Git Bash):
 
 ```bash
 cd ..                                        # leave skill-lab; the demo repo is a sibling
@@ -42,7 +42,7 @@ gate: blocked (see skill change-record)
 missing 'Tier: T0|T1|T2|T3' trailer in commit message
 ```
 
-The hook only acts when `CLAUDE_CODE_CHILD_SESSION=1`, which Claude Code sets in its own sessions. A plain `git commit` in your terminal is not checked.
+The hook only acts when `CLAUDE_CODE_CHILD_SESSION=1`. In the author's test (Claude Code desktop on Windows 11, see `docs/changes/2026-11-04-hook-payload-spike.md`) the Bash and PowerShell tools had it set; other versions and platforms are not verified. A plain `git commit` in your terminal is not checked.
 
 To use the skills, copy the directories you want from `skills/` into `~/.claude/skills/`. `examples/CLAUDE.md` is the user-level rule file (tier table and skill routing) the author runs with; adapt it before using it.
 

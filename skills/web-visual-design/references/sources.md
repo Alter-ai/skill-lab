@@ -81,7 +81,7 @@ Grades: **normative** (standard text or a licence), **vendor guidance** (documen
 
 | Key | What | Grade |
 |---|---|---|
-| D7 | Owner's benchmark survey, section D7 of the personal site design record, 2026-11-05: first screen, desktop only, 9 hand-picked sites | measured, small sample |
+| D7 | Owner's benchmark survey, section D7 of the personal site design record, 2026-11-05: first screen, desktop only, 9 hand-picked sites; the record is from an unpublished plan and is not in this repo | measured, small sample |
 | BASELINE | Three no-skill outputs for this skill's evals, 2026-11-05 | measured, n=3 |
 | EVAL-R1 | Blind review of the three with-skill outputs from the first version of this skill | measured, n=3, one reviewer |
 | COMPUTED | Ratios and gamut limits computed with `scripts/palette_check.py` | measured |

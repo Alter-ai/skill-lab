@@ -47,6 +47,6 @@ The script reads only the `## 時程` table (columns 項目 | 開始 | 結束 | 
 
 ## Gotchas
 
-- `uv run` without `--isolated --no-project` picks up a parent `.venv`; on this machine `~/code/.venv` is Python 3.10 with a broken numpy.
+- `uv run` without `--isolated --no-project` picks up a parent `.venv`, and that environment may have a different Python or broken packages.
 - matplotlib needs a CJK font for Chinese labels; the script asks for Microsoft JhengHei first.
 - A course or client template may fix the report sections; keep BACKLOG.md as the source and copy from it into the report, not the reverse.
