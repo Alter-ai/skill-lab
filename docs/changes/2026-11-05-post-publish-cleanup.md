@@ -1,12 +1,12 @@
 ---
 tier: T2
-status: partial
+status: done
 components: [skilllab]
 evidence:
   - .github/workflows/test.yml:27
 verified_by:
   - C:/Python313/python.exe -I tests/test_skill_audit.py
-reviewed_by: []
+reviewed_by: [fresh-context subagent]
 supersedes: []
 ---
 ## 為什麼
