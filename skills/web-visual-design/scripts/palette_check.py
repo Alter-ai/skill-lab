@@ -71,6 +71,8 @@ def _check_mode(name, mode):
             probs.append(f"{name}: color {k}: {e}")
     if not 4 <= len(mode["colors"]) <= 6:
         probs.append(f"{name}: {len(mode['colors'])} colors, need 4 to 6")
+    if not mode.get("pairs"):
+        probs.append(f"{name}: no pairs to check")
     for p in mode.get("pairs") or []:
         fg, bg, use = p.get("fg"), p.get("bg"), p.get("use")
         if use not in MIN_RATIO:

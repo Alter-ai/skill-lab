@@ -51,6 +51,16 @@ for name, t in cases.items():
     probs = pc.check(t)
     assert probs, name
     assert any(p.startswith(("light", "dark")) for p in probs), (name, probs)
+for which in ("light", "dark"):
+    for label, pairs in (("empty", []), ("missing", None)):
+        m = dict(mode() if which == "light" else OK_DARK)
+        if pairs is None:
+            m.pop("pairs")
+        else:
+            m["pairs"] = pairs
+        t = toks(m, OK_DARK) if which == "light" else toks(mode(), m)
+        probs = pc.check(t)
+        assert probs and probs[0].startswith(which) and "pairs" in probs[0], (which, label, probs)
 low = pc.check(cases["low contrast"])
 assert "4.47" in low[0] and "4.5" in low[0], low
 
