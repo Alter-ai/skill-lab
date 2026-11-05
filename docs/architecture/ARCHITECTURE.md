@@ -70,6 +70,7 @@ elements:
       - Imported third-party skills carry LICENSE and a SOURCE.md recording upstream commit, copied date and local modifications
       - web-visual-design holds graded colour, Chinese-Latin type and layout knowledge in references/; its procedure keeps the spec to the brief's length with working in an appendix
       - web-visual-design/scripts/palette_check.py checks tokens.json for WCAG 2.2 contrast on declared pairs; exits 0 pass, 1 problems, 2 unreadable or bad usage; empty pairs and malformed input are problems, not crashes
+      - oss-release-readiness/scripts/release_check.py scans HEAD and all refs of a git repo for forbidden strings, author emails, sensitive paths, notebook outputs, files over 5 MiB, missing LICENSE/README.md/SECURITY.md and missing skill attribution; findings never echo the forbidden text; exits 0 clean, 1 findings, 2 not a git repo or no commits
     code: skills/
     parent: skilllab
   - id: audit

@@ -288,6 +288,14 @@
       "expected": "web-visual-design loads",
       "observed_baseline": "",
       "verdict": "pending"
+    },
+    {
+      "id": "ossr-1",
+      "area": "oss-release-readiness",
+      "prompt": "準備把這個 repo 公開到 GitHub，先檢查有沒有不能公開的東西",
+      "expected": "oss-release-readiness loads",
+      "observed_baseline": "",
+      "verdict": "pending"
     }
   ]
 }
