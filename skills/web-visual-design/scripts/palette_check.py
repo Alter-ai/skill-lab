@@ -102,8 +102,8 @@ def check(tokens: dict) -> list[str]:
     for name in ("light", "dark"):
         if name not in modes:
             probs.append(f"{name}: mode missing")
-        else:
-            probs += _check_mode(name, modes[name])
+    for name, m in modes.items():  # every mode present, not only light and dark
+        probs += _check_mode(name, m)
     return probs
 
 

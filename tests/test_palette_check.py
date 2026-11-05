@@ -57,6 +57,12 @@ for name, t in cases.items():
     assert any(p.startswith(("light", "dark")) for p in probs), (name, probs)
 assert any("7 colors" in p for p in pc.check(cases["7 colors"])), pc.check(cases["7 colors"])
 assert any("3 colors" in p for p in pc.check(cases["3 colors"])), pc.check(cases["3 colors"])
+# extra modes (e.g. high-contrast) are checked too; light and dark stay required
+hc = {"modes": {**toks(mode())["modes"], "hc": {"colors": {"bg": "#FFFFFF", "text": "#FFFFFF", "a": "#777777", "b": "#336699"},
+                                                  "pairs": [{"fg": "text", "bg": "bg", "use": "body"}]}}}
+assert any(p.startswith("hc:") for p in pc.check(hc)), pc.check(hc)
+assert pc.check({"modes": {**toks(mode())["modes"], "hc": OK_DARK}}) == []
+
 six = {f"c{i}": "#000000" for i in range(5)} | {"w": "#FFFFFF"}
 assert pc.check(toks(mode(colors=six, pairs=[{"fg": "w", "bg": "c0", "use": "body"}]))) == []
 # malformed pairs are reported as problems, never raised
